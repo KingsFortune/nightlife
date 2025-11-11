@@ -1,4 +1,4 @@
----@deprecated This file is deprecated. If you are utilizing QB-Core bridge functionality you will need to populate weapons here for them to be available in QBCore.Shared.Weapons. If not please add your weapons in ox_inventory/data/weapons.lua file.
+---@deprecated This file is deprecated and will be removed in the future. If you are utilizing QB-Core bridge functionality you will need to populate weapons here for them to be available in QBCore.Shared.Weapons. If not please add your weapons in ox_inventory/data/weapons.lua file. Currently weapons in this file will be converted on next server start.
 ---@type table<number, Weapon>
 return {
     -- // WEAPONS
@@ -26,7 +26,6 @@ return {
     [`weapon_handcuffs`] 			 = {name = 'weapon_handcuffs', 		label = 'Handcuffs', 			weapontype = 'Melee',	ammotype = nil,	damagereason = 'Melee killed / Whacked / Executed / Beat down / Murdered / Battered'},
     [`weapon_bread`] 				 = {name = 'weapon_bread', 			label = 'Baquette', 			weapontype = 'Melee',	ammotype = nil,	damagereason = 'Melee killed / Whacked / Executed / Beat down / Murdered / Battered'},
     [`weapon_stone_hatchet`] 		 = {name = 'weapon_stone_hatchet', 	label = 'Stone Hatchet',        weapontype = 'Melee',	ammotype = nil,	damagereason = 'Knifed / Stabbed / Eviscerated'},
-    [`weapon_candycane`]             = {name = 'weapon_candycane',      label = 'Candy Cane',           weapontype = 'Melee',   ammotype = nil, damagereason = 'Melee Killed / Whacked / Executed / Beat down / Musrdered / Battered / Candy Caned' },
 
     -- Handguns
     [`weapon_pistol`] 				 = {name = 'weapon_pistol', 		label = 'Pistol', 				    weapontype = 'Pistol',	ammotype = 'AMMO_PISTOL',	damagereason = 'Pistoled / Blasted / Plugged / Bust a cap in'},

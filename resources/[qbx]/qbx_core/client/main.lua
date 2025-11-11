@@ -6,19 +6,15 @@ QBX.Shared = require 'shared.main'
 QBX.IsLoggedIn = false
 
 ---@return table<string, Vehicle>
----@overload fun(key: string): Vehicle
-function GetVehiclesByName(key)
-    local vehicles = QBX.Shared.Vehicles
-    return vehicles[key] or vehicles
+function GetVehiclesByName()
+    return QBX.Shared.Vehicles
 end
 
 exports('GetVehiclesByName', GetVehiclesByName)
 
 ---@return table<number, Vehicle>
----@overload fun(key: number): Vehicle
-function GetVehiclesByHash(key)
-    local vehicles = QBX.Shared.VehicleHashes
-    return vehicles[key] or vehicles
+function GetVehiclesByHash()
+    return QBX.Shared.VehicleHashes
 end
 
 exports('GetVehiclesByHash', GetVehiclesByHash)
@@ -31,10 +27,8 @@ end
 exports('GetVehiclesByCategory', GetVehiclesByCategory)
 
 ---@return table<number, Weapon>
----@overload fun(key: number): Weapon
-function GetWeapons(key)
-    local weapons = QBX.Shared.Weapons
-    return weapons[key] or weapons
+function GetWeapons()
+    return QBX.Shared.Weapons
 end
 
 exports('GetWeapons', GetWeapons)
@@ -67,7 +61,7 @@ CreateThread(function()
             if gameName and gameName ~= 'CARNOTFOUND' then
                 AddTextEntryByHash(joaat(gameName), v.name)
             else
-                lib.print.warn(('Could not find gameName value in vehicles.meta for vehicle model %s'):format(v.model))
+                lib.print.warn('Could not find gameName value in vehicles.meta for vehicle model %s', v.model)
             end
         end
     end

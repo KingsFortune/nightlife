@@ -8,12 +8,6 @@ RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
         NetworkSetFriendlyFireOption(true)
     end
 
-    NetworkEndTutorialSession()
-
-    while NetworkIsInTutorialSession() do
-        Wait(0)
-    end
-
     local motd = GetConvar('qbx:motd', '')
     if motd ~= '' then
         exports.chat:addMessage({ template = motd })
@@ -44,8 +38,6 @@ end)
 
 ---@param coords vector3
 RegisterNetEvent('QBCore:Command:TeleportToPlayer', function(coords)
-    if GetInvokingResource() then return end
-
     SetPedCoordsKeepVehicle(cache.ped, coords.x, coords.y, coords.z)
 end)
 
@@ -54,8 +46,6 @@ end)
 ---@param z number
 ---@param h number
 RegisterNetEvent('QBCore:Command:TeleportToCoords', function(x, y, z, h)
-    if GetInvokingResource() then return end
-    
     SetPedCoordsKeepVehicle(cache.ped, x, y, z)
     SetEntityHeading(cache.ped, h or GetEntityHeading(cache.ped))
 end)
@@ -212,24 +202,29 @@ RegisterNetEvent('QBCore:Client:OnSharedUpdateMultiple', function(tableName, val
 end)
 
 -- Set vehicle props
----@param netId number
+---@param vehicle number
 ---@param props table<any, any>
-RegisterNetEvent('qbx_core:client:setVehicleProperties', function(netId, props)
+qbx.entityStateHandler('setVehicleProperties', function(vehicle, _, props)
     if not props then return end
-    local timeOut = GetGameTimer() + 1000
-    local vehicle = NetworkGetEntityFromNetworkId(netId)
-    while true do
-        if NetworkGetEntityOwner(vehicle) == cache.playerId then
-            if lib.setVehicleProperties(vehicle, props) then
-                return
-            end
-        end
-        if GetGameTimer() > timeOut then
-            return
-        end
 
-        Wait(50)
-    end
+    SetTimeout(0, function()
+        local state = Entity(vehicle).state
+
+        local timeOut = GetGameTimer() + 10000
+
+        while state.setVehicleProperties do
+            if NetworkGetEntityOwner(vehicle) == cache.playerId then
+                if lib.setVehicleProperties(vehicle, props) then
+                    state:set('setVehicleProperties', nil, true)
+                end
+            end
+            if GetGameTimer() > timeOut then
+                break
+            end
+
+            Wait(50)
+        end
+    end)
 end)
 
 -- Clear vehicle peds

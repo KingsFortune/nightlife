@@ -27,27 +27,11 @@ end
 
 exports('GetSource', GetSource)
 
----@param identifier Identifier
----@return integer source of the player with the matching identifier or 0 if no player found
-function GetUserId(identifier)
-    for src in pairs(QBX.Players) do
-        local idens = GetPlayerIdentifiers(src)
-        for _, id in pairs(idens) do
-            if identifier == id then
-                return QBX.Players[src].PlayerData.userId
-            end
-        end
-    end
-    return 0
-end
-
-exports('GetUserId', GetUserId)
-
 ---@param source Source|string source or identifier of the player
 ---@return Player
 function GetPlayer(source)
-    if tonumber(source) ~= nil then
-        return QBX.Players[tonumber(source)]
+    if type(source) == 'number' then
+        return QBX.Players[source]
     else
         return QBX.Players[GetSource(source --[[@as string]])]
     end
@@ -66,18 +50,6 @@ function GetPlayerByCitizenId(citizenid)
 end
 
 exports('GetPlayerByCitizenId', GetPlayerByCitizenId)
-
----@param userId string
----@return Player?
-function GetPlayerByUserId(userId)
-    for src in pairs(QBX.Players) do
-        if QBX.Players[src].PlayerData.userId == userId then
-            return QBX.Players[src]
-        end
-    end
-end
-
-exports('GetPlayerByUserId', GetPlayerByUserId)
 
 ---@param number string
 ---@return Player?
@@ -346,7 +318,7 @@ function IsOptin(source)
     local license = GetPlayerIdentifierByType(source --[[@as string]], 'license2') or GetPlayerIdentifierByType(source --[[@as string]], 'license')
     if not license or not IsPlayerAceAllowed(source --[[@as string]], 'admin') then return false end
     local player = GetPlayer(source)
-    return player.PlayerData.metadata.optin
+    return player.PlayerData.optin
 end
 
 exports('IsOptin', IsOptin)
@@ -357,8 +329,8 @@ function ToggleOptin(source)
     local license = GetPlayerIdentifierByType(source --[[@as string]], 'license2') or GetPlayerIdentifierByType(source --[[@as string]], 'license')
     if not license or not IsPlayerAceAllowed(source --[[@as string]], 'admin') then return end
     local player = GetPlayer(source)
-    player.PlayerData.metadata.optin = not player.PlayerData.metadata.optin
-    player.Functions.SetMetaData('optin', player.PlayerData.metadata.optin)
+    player.PlayerData.optin = not player.PlayerData.optin
+    player.Functions.SetPlayerData('optin', player.PlayerData.optin)
 end
 
 exports('ToggleOptin', ToggleOptin)
@@ -531,7 +503,7 @@ exports("SearchPlayers", searchPlayerEntities)
 local function isGradeBoss(group, grade)
     local groupData = GetJob(group) or GetGang(group)
     if not groupData then return end
-    return groupData.grades[grade].isboss
+    return groupData[grade].IsBoss
 end
 
 exports('IsGradeBoss', isGradeBoss)

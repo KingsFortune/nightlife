@@ -2,8 +2,8 @@ lib.versionCheck('Qbox-project/qbx_core')
 local startupErrors, errorMessage
 if not lib.checkDependency('ox_lib', '3.20.0', true) then
     startupErrors, errorMessage = true, 'ox_lib version 3.20.0 or higher is required'
-elseif not lib.checkDependency('ox_inventory', '2.42.1', true) then
-    startupErrors, errorMessage = true, 'ox_inventory version 2.42.1 or higher is required'
+    -- elseif not lib.checkDependency('ox_inventory', '2.42.1', true) then -- qs inventory installation
+    --     startupErrors, errorMessage = true, 'ox_inventory version 2.42.1 or higher is required'
 elseif GetConvar('inventory:framework', '') ~= 'qbx' then
     startupErrors, errorMessage = true, 'inventory:framework must be set to "qbx" in order to use qbx_core'
 elseif GetConvarInt('onesync_enableInfinity', 0) ~= 1 then
@@ -25,6 +25,7 @@ SetRoutingBucketEntityLockdownMode(0, bucketLockDownMode)
 QBX = {}
 QBX.Shared = require 'shared.main'
 
+---@alias Source integer
 ---@type table<Source, Player>
 QBX.Players = {}
 GlobalState.PlayerCount = 0
@@ -98,19 +99,15 @@ end
 exports('GetVehicleClass', GetVehicleClass)
 
 ---@return table<string, Vehicle>
----@overload fun(key: string): Vehicle
-function GetVehiclesByName(key)
-    local vehicles = QBX.Shared.Vehicles
-    return vehicles[key] or vehicles
+function GetVehiclesByName()
+    return QBX.Shared.Vehicles
 end
 
 exports('GetVehiclesByName', GetVehiclesByName)
 
 ---@return table<number, Vehicle>
----@overload fun(key: number): Vehicle
-function GetVehiclesByHash(key)
-    local vehicles = QBX.Shared.VehicleHashes
-    return vehicles[key] or vehicles
+function GetVehiclesByHash()
+    return QBX.Shared.VehicleHashes
 end
 
 exports('GetVehiclesByHash', GetVehiclesByHash)
@@ -123,10 +120,8 @@ end
 exports('GetVehiclesByCategory', GetVehiclesByCategory)
 
 ---@return table<number, Weapon>
----@overload fun(key: number): Weapon
-function GetWeapons(key)
-    local weapons = QBX.Shared.Weapons
-    return weapons[key] or weapons
+function GetWeapons()
+    return QBX.Shared.Weapons
 end
 
 exports('GetWeapons', GetWeapons)

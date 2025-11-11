@@ -26,8 +26,6 @@ local function triggerEventHooks(event, payload)
             return false
         end
     end
-
-    return true
 end
 
 local hookId = 0

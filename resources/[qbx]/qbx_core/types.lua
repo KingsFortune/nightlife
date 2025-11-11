@@ -2,8 +2,6 @@
 
 ---@alias NotificationPosition 'top' | 'top-right' | 'top-left' | 'bottom' | 'bottom-right' | 'bottom-left' | 'center-right' | 'center-left'
 ---@alias NotificationType 'info' | 'warning' | 'success' | 'error'
----@alias PlayerIdentifier 'username' | 'license' | 'license2' | 'fivem' | 'discord'
----@alias Source integer
 
 ---@class ErrorResult
 ---@field code string
@@ -41,6 +39,7 @@
 ---@field jobs table<string, integer>
 ---@field gangs table<string, integer>
 ---@field source? Source present if player is online
+---@field optin? boolean present if player is online
 
 ---@class PlayerFunctions
 ---@field UpdatePlayerData fun()
@@ -125,7 +124,6 @@
 ---@field position vector3
 
 ---@class PlayerEntity
----@field userId? integer
 ---@field citizenid string
 ---@field license string
 ---@field name string
@@ -161,7 +159,6 @@
 ---@field card number
 
 ---@class PlayerMetadata
----@field optin? boolean If opted in for admin duty
 ---@field health number
 ---@field armor number
 ---@field hunger number
@@ -197,14 +194,12 @@
 ---@field type? string
 ---@field onduty boolean
 ---@field isboss boolean
----@field bankAuth boolean
 ---@field grade {name: string, level: number}
 
 ---@class PlayerGang
 ---@field name string
 ---@field label string
 ---@field isboss boolean
----@field bankAuth boolean
 ---@field grade {name: string, level: number}
 
 ---@class PlayerSkin
@@ -246,7 +241,6 @@
 ---@field model string
 ---@field price number
 ---@field category string
----@field type string
 ---@field hash string | integer actually just an integer but string is required for types to align when using `asbo` for example
 
 ---@class Weapon
