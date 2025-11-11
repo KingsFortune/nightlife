@@ -1,0 +1,78 @@
+# FiveM Server - Sensitive & Generated Files
+
+# Server Configuration Files (contain license keys, database credentials, etc.)
+server.cfg
+server.cfg.bkp
+*.cfg.bak
+
+# Database Credentials
+mysql_connection_string.txt
+
+# Custom Logo
+myLogo.png
+
+# Cache Directory (generated files, resource builds)
+cache/
+cache/**/*
+
+# Server Logs
+*.log
+logs/
+
+# Database Backups
+*.sql
+*.db
+
+# Private/Local Resources (if any)
+resources/[private]/
+resources/[local]/
+
+# Node Modules (if using any JS resources)
+**/node_modules/
+package-lock.json
+yarn.lock
+
+# Build Artifacts
+**/dist/
+**/build/
+**/.next/
+
+# IDE / Editor Files
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary Files
+*.tmp
+*.temp
+*.swp
+*~
+
+# FiveM Specific
+txData/
+*.rpf.backup
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Crash Dumps
+*.dmp
+
+# Backup Files
+*.backup
+*-backup.*
+
+# Personal Notes
+NOTES.md
+TODO.md
+.notes/
