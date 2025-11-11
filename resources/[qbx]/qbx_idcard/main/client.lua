@@ -84,10 +84,5 @@ AddEventHandler('onResourceStart', function(resourceName)
      end)
 end)
 
-exports.ox_inventory:displayMetadata({
-    firstname = 'Firstname',
-    lastname = 'Lastname',
-    nationality = 'Nationality',
-    birthdate = 'Birthdate',
-    citizenid = 'eID'
-})
+-- Note: Metadata display is handled by qs-inventory in config/metadata.js
+-- No need for displayMetadata export with qs-inventory
