@@ -5,23 +5,24 @@
 This is a **Qbox-based FiveM roleplay server** (formerly QB-Core). Qbox is a modern GTA V multiplayer framework built on:
 - **qbx_core**: Core framework handling players, jobs, gangs, and characters
 - **ox_lib**: Utility library providing UI, callbacks, locales, and common functions
-- **ox_inventory**: Inventory system replacing legacy qb-inventory
+- **qs-inventory**: Inventory system (Quasar Store - replaces ox_inventory)
 - **oxmysql**: Database connector for MySQL operations
 - **pma-voice**: Proximity voice system with radio/phone support
 
 ### QB-Core Bridge Layer
-Qbox maintains **backward compatibility** with QB-Core resources via a bridge layer (`qbx_core/bridge/qb/`). Most legacy QB resources work without modification. However, **do not use qb-inventory** - it's incompatible; use ox_inventory instead.
+Qbox maintains **backward compatibility** with QB-Core resources via a bridge layer (`qbx_core/bridge/qb/`). Most legacy QB resources work without modification. However, **this server uses qs-inventory instead of ox_inventory** - you must use qs-inventory exports.
 
 ## Project Structure
 
 ```
 server.cfg              # Main server config, loads resources in order
-ox.cfg                  # Ox ecosystem configuration (ox_lib, ox_target, ox_inventory)
+ox.cfg                  # Ox ecosystem configuration (ox_lib, ox_target)
 voice.cfg               # pma-voice settings
 permissions.cfg         # ACE permissions for admin/mod/support groups
 resources/
   [qbx]/                # Qbox framework resources (jobs, core systems)
-  [ox]/                 # Ox ecosystem (ox_lib, ox_inventory, ox_target, oxmysql)
+  [ox]/                 # Ox ecosystem (ox_lib, ox_target, oxmysql)
+  [quasar]/             # Quasar Store resources (qs-inventory, qs-* scripts)
   [standalone]/         # Framework-agnostic resources
   [voice]/              # pma-voice
   [npwd]/               # Phone system (NPWD)
@@ -32,9 +33,10 @@ resources/
 1. Core FiveM resources (mapmanager, chat, spawnmanager, sessionmanager)
 2. ox_lib (required by most resources)
 3. qbx_core
-4. ox_target, oxmysql, ox_inventory
-5. Job/gameplay resources
-6. Standalone resources
+4. ox_target, oxmysql
+5. qs-inventory and [quasar] resources
+6. Job/gameplay resources
+7. Standalone resources
 
 ## Core Conventions
 
@@ -137,15 +139,23 @@ RegisterNetEvent('QBCore:Player:SetPlayerData', function(data)
 end)
 ```
 
-### Inventory System (ox_inventory)
+### Inventory System (qs-inventory)
 
-**CRITICAL**: Use ox_inventory exports, **not** player.Functions inventory methods.
+**CRITICAL**: This server uses **qs-inventory** (Quasar Store), NOT ox_inventory. Use qs-inventory exports.
 
 ```lua
 -- Server-side
-exports.ox_inventory:AddItem(source, 'bread', 5)
-exports.ox_inventory:RemoveItem(source, 'water', 1)
-local item = exports.ox_inventory:GetItem(source, 'phone', nil, true)
+exports['qs-inventory']:AddItem(source, 'bread', 5)
+exports['qs-inventory']:RemoveItem(source, 'water', 1)
+local hasItem = exports['qs-inventory']:GetItemTotalAmount(source, 'phone') > 0
+local canCarry = exports['qs-inventory']:CanCarryItem(source, 'item', amount)
+
+-- Get item list (replaces ox_inventory:Items())
+local ITEMS = exports['qs-inventory']:GetItemList()
+local itemLabel = ITEMS['bread'].label
+
+-- Register stashes
+exports['qs-inventory']:RegisterStash(id, label, slots, weight, owner, groups, coords)
 
 -- Create useable items
 exports.qbx_core:CreateUseableItem('handcuffs', function(source)
@@ -154,8 +164,8 @@ exports.qbx_core:CreateUseableItem('handcuffs', function(source)
     TriggerClientEvent('police:client:CuffPlayerSoft', source)
 end)
 
--- Client-side
-exports.ox_inventory:openNearbyInventory()
+-- Custom drops
+exports['qs-inventory']:CustomDrop(dropId, items, coords)
 ```
 
 ### ox_lib Patterns
@@ -262,7 +272,7 @@ When spawning vehicles, use `exports.qbx_vehiclekeys:GiveKeys(source, plate)` to
 
 ### Common Issues
 - **Missing dependency**: Check fxmanifest.lua dependencies match installed resources
-- **Inventory errors**: Ensure ox_inventory is used, not qb-inventory calls
+- **Inventory errors**: Ensure qs-inventory is used, not ox_inventory or qb-inventory calls
 - **Player data nil**: Wait for player to be loaded (`QBCore:Client:OnPlayerLoaded` event)
 - **Database errors**: Verify MySQL connection in server.cfg and oxmysql is started
 
@@ -287,8 +297,9 @@ Each job resource (qbx_police, qbx_ambulancejob, etc.) follows:
 - Vehicle spawn zones with job restrictions
 
 ## Important: What NOT to Do
-- ❌ Don't use `qb-inventory` functions - use ox_inventory
+- ❌ Don't use `qb-inventory` or `ox_inventory` - use qs-inventory
 - ❌ Don't modify qbx_core outside config files unless absolutely necessary
+- ❌ Don't modify qs-inventory or other [quasar] resources - they are the base
 - ❌ Don't hardcode strings - use locales for multi-language support
 - ❌ Don't use deprecated player.Functions methods for inventory
 - ❌ Don't forget `lua54 'yes'` and `use_experimental_fxv2_oal 'yes'` in manifests

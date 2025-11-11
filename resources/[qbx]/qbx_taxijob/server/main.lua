@@ -1,5 +1,5 @@
 local sharedConfig = require 'config.shared'
-local ITEMS = exports.ox_inventory:Items()
+local ITEMS = exports['qs-inventory']:GetItemList()
 
 local function nearTaxi(src)
     local ped = GetPlayerPed(src)

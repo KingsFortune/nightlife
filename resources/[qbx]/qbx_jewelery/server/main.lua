@@ -4,7 +4,7 @@ local electricalBusy
 local startedElectrical = {}
 local startedVitrine = {}
 local alarmFired
-local ITEMS = exports.ox_inventory:Items()
+local ITEMS = exports['qs-inventory']:GetItemList()
 
 lib.callback.register('qbx_jewelery:callback:electricalbox', function(source)
     local player = exports.qbx_core:GetPlayer(source)
@@ -16,7 +16,7 @@ lib.callback.register('qbx_jewelery:callback:electricalbox', function(source)
         return
     end
 
-    if exports.ox_inventory:Search(source, 'count', sharedConfig.doorlock.requiredItem) == 0 then
+    if exports['qs-inventory']:GetItemTotalAmount(source, sharedConfig.doorlock.requiredItem) == 0 then
         exports.qbx_core:Notify(source, locale('notify.noitem', ITEMS[sharedConfig.doorlock.requiredItem].label), 'error')
         return
     end
@@ -113,15 +113,15 @@ RegisterNetEvent('qbx_jewelery:server:endcabinet', function()
         local RandomItem = config.reward.items[math.random(1, #config.reward.items)]
         local quantity = math.random(RandomItem.min, RandomItem.max)
 
-        if exports.ox_inventory:CanCarryItem(source, RandomItem.name, quantity) then
-            exports.ox_inventory:AddItem(source, RandomItem.name, quantity)
+        if exports['qs-inventory']:CanCarryItem(source, RandomItem.name, quantity) then
+            exports['qs-inventory']:AddItem(source, RandomItem.name, quantity)
         else
             customDropItems[#customDropItems+1] = {RandomItem.name, quantity}
         end
     end
 
     if #customDropItems > 0 then
-        exports.ox_inventory:CustomDrop('jewelery', customDropItems, playerCoords)
+        exports['qs-inventory']:CustomDrop('jewelery', customDropItems, playerCoords)
         exports.qbx_core:Notify(source, locale('notify.reward_dropped'), 'warning')
     end
 

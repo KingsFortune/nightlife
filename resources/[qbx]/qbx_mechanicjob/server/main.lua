@@ -11,7 +11,7 @@ local stash = {
     groups = {mechanic = 0},
     coords = sharedConfig.locations.stash
 }
-exports.ox_inventory:RegisterStash(stash.id, stash.label, stash.slots, stash.weight, stash.owner, stash.groups, stash.coords)
+exports['qs-inventory']:RegisterStash(stash.id, stash.label, stash.slots, stash.weight, stash.owner, stash.groups, stash.coords)
 
 -- Functions
 
