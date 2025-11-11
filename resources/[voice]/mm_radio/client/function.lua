@@ -122,13 +122,13 @@ end
 function Radio:doRadioCheck(_)
     self.batteryData = {}
     self.hasRadio = false
-    local playerItems = exports.ox_inventory:Search('slots', Shared.RadioItem)
-    for _, v in pairs(playerItems) do
-        if lib.table.contains(Shared.RadioItem, v.name) then
+    -- qs-inventory compatibility: Check if player has radio item
+    for _, radioItem in ipairs(Shared.RadioItem) do
+        local hasItem = exports['qs-inventory']:GetItemTotalAmount(radioItem)
+        if hasItem and hasItem > 0 then
             self.hasRadio = true
-            if v.metadata?.radioId or v.info?.radioId then
-                self.batteryData[#self.batteryData+1] = v['metadata'].radioId
-            end
+            -- Note: Battery tracking requires server-side item metadata access
+            break
         end
     end
     if not self.hasRadio and self.onRadio then
