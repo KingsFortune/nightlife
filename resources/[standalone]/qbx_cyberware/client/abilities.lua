@@ -141,8 +141,7 @@ CreateThread(function()
             local ped = PlayerPedId()
             local isFalling = IsPedFalling(ped)
             local coords = GetEntityCoords(ped)
-            local groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, false)
-            local distanceToGround = coords.z - groundZ
+            local _, groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z)
             local velocity = GetEntityVelocity(ped)
             
             -- Start preparing once we're falling downward after double jump
