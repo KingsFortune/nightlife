@@ -139,42 +139,53 @@ CreateThread(function()
         if forceRollOnLanding and HasImplant('reinforced_tendons') then
             local ped = PlayerPedId()
             
-            -- Check if ANY landing animation is trying to play
-            if IsEntityPlayingAnim(ped, 'move_fall', 'land_fall', 1) then
-                print('^1[Cyberware]^7 INTERCEPTED land_fall! Forcing combat roll...')
+            -- Debug: print status every frame while flag is set
+            local isFalling = IsPedFalling(ped)
+            local velocity = GetEntityVelocity(ped)
+            local vertSpeed = velocity.z
+            
+            -- Check for landing moment (falling and about to hit ground)
+            if isFalling and vertSpeed < -5.0 then
+                print('^3[Cyberware]^7 Falling fast! Speed: '..tostring(vertSpeed)..' - Ready to intercept')
+            end
+            
+            -- Check if ANY animation from move_fall is playing
+            if IsEntityPlayingAnim(ped, 'move_fall', 'land_fall', 1) or
+               IsEntityPlayingAnim(ped, 'move_fall', 'land_roll', 1) or  
+               IsEntityPlayingAnim(ped, 'move_fall', 'rollover_hold', 1) then
                 
-                -- Immediately cancel it
+                print('^1[Cyberware]^7 ========== INTERCEPTED LANDING ANIMATION! ==========')
+                
+                -- Nuclear option - stop everything
                 ClearPedTasksImmediately(ped)
+                ClearPedSecondaryTask(ped)
+                SetPedCanRagdoll(ped, false)
                 
-                -- Give forward momentum for roll effect
-                local heading = GetEntityHeading(ped)
-                local forwardX = -math.sin(math.rad(heading)) * 3.0
-                local forwardY = math.cos(math.rad(heading)) * 3.0
-                
-                SetEntityVelocity(ped, forwardX, forwardY, -2.0)
-                
-                -- Request roll animation
-                RequestAnimDict('move_crouch_proto')
+                -- Request the roll animation NOW
+                RequestAnimDict('move_ped_crouched')
                 local timeout = 0
-                while not HasAnimDictLoaded('move_crouch_proto') and timeout < 500 do
-                    Wait(10)
-                    timeout = timeout + 10
+                while not HasAnimDictLoaded('move_ped_crouched') and timeout < 1000 do
+                    Wait(0)
+                    timeout = timeout + 1
                 end
                 
-                if HasAnimDictLoaded('move_crouch_proto') then
-                    -- Play crouch idle (looks like recovering from roll)
-                    TaskPlayAnim(ped, 'move_crouch_proto', 'idle_intro', 8.0, -8.0, 800, 0, 0, false, false, false)
-                    print('^2[Cyberware]^7 Playing recovery animation')
-                else
-                    print('^1[Cyberware]^7 Dict failed, using velocity only')
+                if HasAnimDictLoaded('move_ped_crouched') then
+                    print('^2[Cyberware]^7 Playing crouch walk (roll effect)')
+                    TaskPlayAnim(ped, 'move_ped_crouched', 'idle', 8.0, -8.0, 600, 1, 0, false, false, false)
+                    
+                    Wait(600)
+                    ClearPedTasks(ped)
                 end
                 
+                SetPedCanRagdoll(ped, true)
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 500)
                 
-                Wait(500)
                 forceRollOnLanding = false
-                print('^2[Cyberware]^7 Roll sequence complete')
+                print('^2[Cyberware]^7 ========== ROLL COMPLETE ==========')
             end
+        else
+            -- Sleep longer when not active
+            Wait(100)
         end
     end
 end)
