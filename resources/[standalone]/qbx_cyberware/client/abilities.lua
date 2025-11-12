@@ -130,6 +130,55 @@ local isJumpingNow = false
 local lastGroundState = true
 local didDoubleJump = false
 
+-- Monitoring thread to intercept landing BEFORE land_fall can play
+CreateThread(function()
+    while true do
+        Wait(0)
+        
+        if didDoubleJump and HasImplant('reinforced_tendons') then
+            local ped = PlayerPedId()
+            local isFalling = IsPedFalling(ped)
+            local coords = GetEntityCoords(ped)
+            local groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, false)
+            local distanceToGround = coords.z - groundZ
+            local velocity = GetEntityVelocity(ped)
+            
+            -- When we're very close to ground (within 1 meter) and falling fast
+            if isFalling and distanceToGround < 1.0 and velocity.z < -3.0 then
+                -- Preload animation RIGHT NOW
+                local dict = 'move_strafe@roll'
+                local anim = 'combatroll_fwd_p2_00'
+                
+                if not HasAnimDictLoaded(dict) then
+                    RequestAnimDict(dict)
+                    while not HasAnimDictLoaded(dict) do
+                        Wait(0)
+                    end
+                end
+                
+                -- Wait for the EXACT moment we touch ground
+                while IsPedFalling(ped) do
+                    Wait(0)
+                end
+                
+                -- INSTANT interrupt and force roll (no delay at all)
+                ClearPedTasksImmediately(ped)
+                SetPedCanRagdoll(ped, false)
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 1, 0, false, false, false)
+                
+                exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
+                
+                -- Clean up after animation
+                Wait(1000)
+                SetPedCanRagdoll(ped, true)
+                didDoubleJump = false
+            end
+        else
+            Wait(100)
+        end
+    end
+end)
+
 CreateThread(function()
     while true do
         Wait(0)
@@ -156,40 +205,13 @@ CreateThread(function()
             -- Consider on ground if: on foot, not falling, not jumping, not ragdolling, and minimal vertical movement
             local isOnGround = isOnFoot and not isFalling and not isJumping and not isRagdoll and verticalSpeed < 0.5
             
-            -- Detect landing (transition from air to ground)
+            -- Detect landing (transition from air to ground) - but DON'T trigger roll here anymore
             if isOnGround and not lastGroundState then
-                -- Combat roll on double jump landing
-                if didDoubleJump then
-                    didDoubleJump = false
-                    
-                    -- NEW APPROACH: Interrupt land_fall immediately
-                    CreateThread(function()
-                        local rollPed = PlayerPedId()
-                        
-                        -- Preload the combat roll animation NOW while still in air
-                        local dict = 'move_strafe@roll'
-                        local anim = 'combatroll_fwd_p2_00'
-                        lib.requestAnimDict(dict)
-                        
-                        -- Wait just 50ms (much shorter than before)
-                        Wait(50)
-                        
-                        -- IMMEDIATELY interrupt whatever animation is playing
-                        ClearPedTasksImmediately(rollPed)
-                        
-                        -- Force combat roll instantly
-                        TaskPlayAnim(rollPed, dict, anim, 8.0, -8.0, -1, 2, 0, false, false, false)
-                        
-                        -- Let it play for duration
-                        Wait(800)
-                        ClearPedTasks(rollPed)
-                        
-                        exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
-                    end)
+                -- Reset if we somehow landed without the monitoring thread catching it
+                if not didDoubleJump then
+                    jumpCount = 0
+                    isJumpingNow = false
                 end
-                
-                jumpCount = 0
-                isJumpingNow = false
             end
             lastGroundState = isOnGround
             
