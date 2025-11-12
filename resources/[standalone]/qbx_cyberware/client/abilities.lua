@@ -133,47 +133,50 @@ local forceRollOnLanding = false
 
 -- Monitor for land_fall animation and replace with combat roll
 CreateThread(function()
+    local rollTriggered = false
+    
     while true do
         Wait(0)
         
         if forceRollOnLanding and HasImplant('reinforced_tendons') then
             local ped = PlayerPedId()
-            
-            -- Debug: print status every frame while flag is set
             local isFalling = IsPedFalling(ped)
             local velocity = GetEntityVelocity(ped)
             local vertSpeed = velocity.z
+            local coords = GetEntityCoords(ped)
+            local groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, false)
+            local distanceToGround = coords.z - groundZ
             
-            -- Check for landing moment (falling and about to hit ground)
-            if isFalling and vertSpeed < -5.0 then
-                print('^3[Cyberware]^7 Falling fast! Speed: '..tostring(vertSpeed)..' - Ready to intercept')
-            end
-            
-            -- Check if ANY animation from move_fall is playing
-            if IsEntityPlayingAnim(ped, 'move_fall', 'land_fall', 1) or
-               IsEntityPlayingAnim(ped, 'move_fall', 'land_roll', 1) or  
-               IsEntityPlayingAnim(ped, 'move_fall', 'rollover_hold', 1) then
+            -- PREDICT landing: falling fast + close to ground
+            if isFalling and vertSpeed < -5.0 and distanceToGround < 3.0 and not rollTriggered then
+                print('^1[Cyberware]^7 ========== PREDICTING LANDING - PRELOADING ANIMATION! ==========')
+                rollTriggered = true
                 
-                print('^1[Cyberware]^7 ========== INTERCEPTED LANDING ANIMATION! ==========')
-                
-                -- Nuclear option - stop everything
-                ClearPedTasksImmediately(ped)
-                ClearPedSecondaryTask(ped)
-                SetPedCanRagdoll(ped, false)
-                
-                -- Request the roll animation NOW
-                RequestAnimDict('move_ped_crouched')
+                -- Preload animation BEFORE landing
+                RequestAnimDict('amb@world_human_bum_slumped@male@laying_on_left_side@base')
                 local timeout = 0
-                while not HasAnimDictLoaded('move_ped_crouched') and timeout < 1000 do
+                while not HasAnimDictLoaded('amb@world_human_bum_slumped@male@laying_on_left_side@base') and timeout < 500 do
                     Wait(0)
                     timeout = timeout + 1
                 end
                 
-                if HasAnimDictLoaded('move_ped_crouched') then
-                    print('^2[Cyberware]^7 Playing crouch walk (roll effect)')
-                    TaskPlayAnim(ped, 'move_ped_crouched', 'idle', 8.0, -8.0, 600, 1, 0, false, false, false)
+                -- Wait for ground contact
+                while IsPedFalling(ped) do
+                    Wait(0)
+                end
+                
+                print('^1[Cyberware]^7 ========== LANDED - FORCING ROLL NOW! ==========')
+                
+                -- IMMEDIATELY clear everything
+                ClearPedTasksImmediately(ped)
+                SetPedCanRagdoll(ped, false)
+                
+                -- Play the animation INSTANTLY
+                if HasAnimDictLoaded('amb@world_human_bum_slumped@male@laying_on_left_side@base') then
+                    TaskPlayAnim(ped, 'amb@world_human_bum_slumped@male@laying_on_left_side@base', 'base', 8.0, -8.0, 500, 1, 0, false, false, false)
+                    print('^2[Cyberware]^7 ROLL ANIMATION PLAYING!')
                     
-                    Wait(600)
+                    Wait(500)
                     ClearPedTasks(ped)
                 end
                 
@@ -181,10 +184,16 @@ CreateThread(function()
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 500)
                 
                 forceRollOnLanding = false
+                rollTriggered = false
                 print('^2[Cyberware]^7 ========== ROLL COMPLETE ==========')
             end
+            
+            -- Reset trigger if no longer falling
+            if not isFalling and rollTriggered then
+                rollTriggered = false
+            end
         else
-            -- Sleep longer when not active
+            rollTriggered = false
             Wait(100)
         end
     end
