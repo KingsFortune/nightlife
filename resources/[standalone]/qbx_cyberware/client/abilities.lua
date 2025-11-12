@@ -311,70 +311,73 @@ CreateThread(function()
             if IsControlJustPressed(0, 22) then -- SPACE
                 local currentTime = GetGameTimer()
                 
-                -- Ignore jump input if recently vaulted (500ms window)
-                if currentTime - lastVaultTime >= 500 then
-                    if isOnGround and jumpCount == 0 then
-                        -- First jump only when on ground and haven't jumped yet
-                        jumpCount = 1
-                        lastJumpTime = currentTime
-                        isJumpingNow = true
-                        didDoubleJump = false
-                        
-                        -- Force the jump with smoother velocity
-                        TaskJump(ped, true)
-                        
-                        -- Smoother boost - less delay and more gradual
-                        SetTimeout(80, function()
-                            local p = PlayerPedId()
-                            local v = GetEntityVelocity(p)
-                            -- Slightly higher first jump for better feel
-                            SetEntityVelocity(p, v.x * 1.1, v.y * 1.1, 12.0)
+                -- Don't intercept jump if aiming (allow combat roll)
+                if not IsPlayerFreeAiming(PlayerId()) then
+                    -- Ignore jump input if recently vaulted (500ms window)
+                    if currentTime - lastVaultTime >= 500 then
+                        if isOnGround and jumpCount == 0 then
+                            -- First jump only when on ground and haven't jumped yet
+                            jumpCount = 1
+                            lastJumpTime = currentTime
+                            isJumpingNow = true
+                            didDoubleJump = false
                             
-                            -- Smooth camera interpolation
-                            SetGameplayCamShakeAmplitude(0.0)
-                        end)
-                        
-                        -- Clear isJumpingNow after shorter time
-                        SetTimeout(1500, function()
-                            if isJumpingNow then
-                                isJumpingNow = false
+                            -- Force the jump with smoother velocity
+                            TaskJump(ped, true)
+                            
+                            -- Smoother boost - less delay and more gradual
+                            SetTimeout(80, function()
+                                local p = PlayerPedId()
+                                local v = GetEntityVelocity(p)
+                                -- Slightly higher first jump for better feel
+                                SetEntityVelocity(p, v.x * 1.1, v.y * 1.1, 12.0)
+                                
+                                -- Smooth camera interpolation
+                                SetGameplayCamShakeAmplitude(0.0)
+                            end)
+                            
+                            -- Clear isJumpingNow after shorter time
+                            SetTimeout(1500, function()
+                                if isJumpingNow then
+                                    isJumpingNow = false
+                                end
+                            end)
+                            
+                        elseif jumpCount == 1 and (currentTime - lastJumpTime) > 250 and not isOnGround and not IsPedRagdoll(ped) then
+                            -- Double jump - reduced delay from 400ms to 250ms for snappier feel
+                            jumpCount = 2
+                            lastJumpTime = currentTime
+                            didDoubleJump = true
+                            
+                            -- Play double jump sound effect
+                            SendNUIMessage({
+                                action = 'playSound',
+                                sound = 'doublejump',
+                                volume = 0.3
+                            })
+                            
+                            -- Play jump animation for visual feedback
+                            TaskJump(ped, true)
+                            
+                            local v = GetEntityVelocity(ped)
+                            -- MUCH stronger boost when falling to overcome downward momentum
+                            local verticalBoost = 25.0
+                            if v.z < -10.0 then
+                                -- Falling very fast from high building: massive boost
+                                verticalBoost = 35.0
+                            elseif v.z < -5.0 then
+                                -- Falling moderately fast: strong boost
+                                verticalBoost = 30.0
                             end
-                        end)
-                        
-                    elseif jumpCount == 1 and (currentTime - lastJumpTime) > 250 and not isOnGround and not IsPedRagdoll(ped) then
-                        -- Double jump - reduced delay from 400ms to 250ms for snappier feel
-                        jumpCount = 2
-                        lastJumpTime = currentTime
-                        didDoubleJump = true
-                        
-                        -- Play double jump sound effect
-                        SendNUIMessage({
-                            action = 'playSound',
-                            sound = 'doublejump',
-                            volume = 0.3
-                        })
-                        
-                        -- Play jump animation for visual feedback
-                        TaskJump(ped, true)
-                        
-                        local v = GetEntityVelocity(ped)
-                        -- MUCH stronger boost when falling to overcome downward momentum
-                        local verticalBoost = 25.0
-                        if v.z < -10.0 then
-                            -- Falling very fast from high building: massive boost
-                            verticalBoost = 35.0
-                        elseif v.z < -5.0 then
-                            -- Falling moderately fast: strong boost
-                            verticalBoost = 30.0
+                            
+                            -- Preserve and boost horizontal velocity
+                            SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, verticalBoost)
+                            
+                            -- Disable ragdoll for 5 seconds after double jump
+                            disableRagdollUntil = GetGameTimer() + 5000
+                            
+                            exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
                         end
-                        
-                        -- Preserve and boost horizontal velocity
-                        SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, verticalBoost)
-                        
-                        -- Disable ragdoll for 5 seconds after double jump
-                        disableRagdollUntil = GetGameTimer() + 5000
-                        
-                        exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
                     end
                 end
             end
