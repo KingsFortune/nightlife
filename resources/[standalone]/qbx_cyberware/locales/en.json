@@ -1,0 +1,29 @@
+{
+    "install": {
+        "progress": "Installing implant...",
+        "success": "Implant installed successfully",
+        "cancelled": "Installation cancelled",
+        "failed": "Installation failed"
+    },
+    "remove": {
+        "progress": "Removing implant...",
+        "success": "Implant removed",
+        "failed": "Removal failed"
+    },
+    "errors": {
+        "already_installed": "You already have this implant installed",
+        "max_implants": "You cannot install more implants (Max: %{max})",
+        "no_item": "You don't have this implant",
+        "not_installed": "You don't have this implant installed",
+        "invalid_implant": "Invalid implant"
+    },
+    "abilities": {
+        "kiroshi_scan": "🎯 Target Scanned",
+        "kiroshi_cooldown": "Optics cooling down: %{time}s",
+        "kiroshi_no_target": "No target in range",
+        "adrenaline_activated": "⚡ ADRENALINE BOOST ACTIVATED",
+        "adrenaline_depleted": "Adrenaline boost depleted",
+        "adrenaline_cooldown": "Adrenaline system recharging: %{time}s",
+        "adrenaline_active": "Adrenaline boost already active"
+    }
+}

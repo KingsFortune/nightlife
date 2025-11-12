@@ -5594,4 +5594,57 @@ ItemList = {
         ['combinable'] = nil,
         ['description'] = 'An empty book that can store images as pages.'
     },
+
+    -- EXPERIMENTAL IMPLANTS (Cyberware)
+    ['implant_subdermal']            = {
+        ['name'] = 'implant_subdermal',
+        ['label'] = 'Subdermal Armor Plating',
+        ['weight'] = 500,
+        ['type'] = 'item',
+        ['image'] = 'implant_subdermal.png',
+        ['unique'] = true,
+        ['useable'] = true,
+        ['shouldClose'] = true,
+        ['rare'] = 'epic',
+        ['description'] = 'Experimental armor plating that can be implanted beneath the skin. Reduces damage taken by 15%.'
+    },
+
+    ['implant_tendons']              = {
+        ['name'] = 'implant_tendons',
+        ['label'] = 'Reinforced Leg Tendons',
+        ['weight'] = 300,
+        ['type'] = 'item',
+        ['image'] = 'implant_tendons.png',
+        ['unique'] = true,
+        ['useable'] = true,
+        ['shouldClose'] = true,
+        ['rare'] = 'epic',
+        ['description'] = 'Experimental tendon reinforcement for enhanced jumping capability. Allows double jumping.'
+    },
+
+    ['implant_kiroshi']              = {
+        ['name'] = 'implant_kiroshi',
+        ['label'] = 'Kiroshi Optical Implant',
+        ['weight'] = 100,
+        ['type'] = 'item',
+        ['image'] = 'implant_kiroshi.png',
+        ['unique'] = true,
+        ['useable'] = true,
+        ['shouldClose'] = true,
+        ['rare'] = 'epic',
+        ['description'] = 'Experimental optical enhancement allowing target analysis. Scan nearby people for information.'
+    },
+
+    ['implant_adrenaline']           = {
+        ['name'] = 'implant_adrenaline',
+        ['label'] = 'Adrenal Response Enhancer',
+        ['weight'] = 200,
+        ['type'] = 'item',
+        ['image'] = 'implant_adrenaline.png',
+        ['unique'] = true,
+        ['useable'] = true,
+        ['shouldClose'] = true,
+        ['rare'] = 'epic',
+        ['description'] = 'Experimental adrenal gland enhancement. Temporarily boosts speed and damage output for 30 seconds.'
+    },
 }

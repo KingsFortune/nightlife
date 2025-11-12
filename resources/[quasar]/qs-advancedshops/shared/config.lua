@@ -555,6 +555,33 @@ Config.Shops = {
         coords = {
             { ped = nil, coords = vector4(454.035156, -980.043945, 30.678345, 82.204727) }
         }
+    },
+    -- Cyberware Shop
+    {
+        name = 'ripperdoc',
+        label = '[E] - Ripperdoc',
+        blip = true,
+        blipSprite = 403,
+        blipColor = 5,
+        blipScale = 0.7,
+        categories = {
+            [1] = {
+                name = 'Experimental Implants',
+                description = 'Advanced Cyberware Technology',
+                icon = 'fa-solid fa-microchip',
+                items = {
+                    { name = 'implant_subdermal', label = 'Subdermal Armor', perPrice = 100000, description = 'Armor plating under the skin' },
+                    { name = 'implant_tendons', label = 'Reinforced Tendons', perPrice = 100000, description = 'Enhanced leg strength' },
+                    { name = 'implant_kiroshi', label = 'Kiroshi Optics', perPrice = 100000, description = 'Advanced tactical scanning' },
+                    { name = 'implant_adrenaline', label = 'Adrenaline Booster', perPrice = 100000, description = 'Combat enhancement system' }
+                }
+            }
+        },
+        pedHash = 's_m_m_scientist_01',
+        scenario = 'WORLD_HUMAN_CLIPBOARD',
+        coords = {
+            { ped = nil, coords = vector4(3612.43, 3632.86, 43.78, 77.52) }
+        }
     }
 }
 
