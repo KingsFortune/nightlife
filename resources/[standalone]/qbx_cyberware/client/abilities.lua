@@ -348,8 +348,9 @@ CreateThread(function()
                 if didDoubleJump then
                     print('^2[Cyberware]^7 Triggering landing roll after double jump')
                     -- Play parachute landing roll animation (smooth combat roll)
+                    -- Flags: 16 = cancellable, allows movement during/after
                     lib.requestAnimDict('move_fall')
-                    TaskPlayAnim(ped, 'move_fall', 'land_roll', 8.0, -8.0, -1, 0, 0, false, false, false)
+                    TaskPlayAnim(ped, 'move_fall', 'land_roll', 8.0, -8.0, 800, 16, 0, false, false, false)
                     didDoubleJump = false
                 end
                 
@@ -364,25 +365,26 @@ CreateThread(function()
                 local heading = GetEntityHeading(ped)
                 local radians = math.rad(heading)
                 
-                local moveSpeed = 0.25
+                local moveSpeed = 0.15 -- Reduced from 0.25 for less slippery feel
                 local newVelX = vel.x
                 local newVelY = vel.y
                 
-                if IsControlPressed(0, 32) then -- W
+                -- Fixed direction calculations
+                if IsControlPressed(0, 32) then -- W - Forward
                     newVelX = newVelX + (-math.sin(radians) * moveSpeed)
                     newVelY = newVelY + (math.cos(radians) * moveSpeed)
                 end
-                if IsControlPressed(0, 33) then -- S
+                if IsControlPressed(0, 33) then -- S - Backward
                     newVelX = newVelX - (-math.sin(radians) * moveSpeed)
                     newVelY = newVelY - (math.cos(radians) * moveSpeed)
                 end
-                if IsControlPressed(0, 34) then -- A
-                    newVelX = newVelX + (math.cos(radians) * moveSpeed)
-                    newVelY = newVelY + (math.sin(radians) * moveSpeed)
-                end
-                if IsControlPressed(0, 35) then -- D
+                if IsControlPressed(0, 34) then -- A - Left
                     newVelX = newVelX - (math.cos(radians) * moveSpeed)
                     newVelY = newVelY - (math.sin(radians) * moveSpeed)
+                end
+                if IsControlPressed(0, 35) then -- D - Right
+                    newVelX = newVelX + (math.cos(radians) * moveSpeed)
+                    newVelY = newVelY + (math.sin(radians) * moveSpeed)
                 end
                 
                 if newVelX ~= vel.x or newVelY ~= vel.y then
