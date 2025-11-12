@@ -248,8 +248,6 @@ CreateThread(function()
             -- Air control ONLY when actually in air AND moving significantly (not running on ground)
             if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 then
                 local vel = GetEntityVelocity(ped)
-                local heading = GetEntityHeading(ped)
-                local radians = math.rad(heading)
                 
                 -- Increased air control for smoother feel
                 local moveSpeed = 0.25
@@ -262,61 +260,44 @@ CreateThread(function()
                 local pedHeading = GetEntityHeading(ped)
                 local finalCamHeading = camHeading + pedHeading
                 
-                -- Calculate input direction relative to camera (FIXED: corrected left/right)
+                -- Calculate input direction relative to camera and apply velocity in that direction
                 if IsControlPressed(0, 32) and IsControlPressed(0, 34) then -- W+A (forward-left)
                     inputHeading = finalCamHeading + 45.0
-                    local rad = math.rad(inputHeading)
-                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
-                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
                 elseif IsControlPressed(0, 32) and IsControlPressed(0, 35) then -- W+D (forward-right)
                     inputHeading = finalCamHeading - 45.0
-                    local rad = math.rad(inputHeading)
-                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
-                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
                 elseif IsControlPressed(0, 33) and IsControlPressed(0, 34) then -- S+A (back-left)
                     inputHeading = finalCamHeading + 135.0
-                    local rad = math.rad(inputHeading)
-                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
-                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
                 elseif IsControlPressed(0, 33) and IsControlPressed(0, 35) then -- S+D (back-right)
                     inputHeading = finalCamHeading - 135.0
+                elseif IsControlPressed(0, 32) then -- W (forward)
+                    inputHeading = finalCamHeading
+                elseif IsControlPressed(0, 33) then -- S (backward)
+                    inputHeading = finalCamHeading + 180.0
+                elseif IsControlPressed(0, 34) then -- A (left)
+                    inputHeading = finalCamHeading + 90.0
+                elseif IsControlPressed(0, 35) then -- D (right)
+                    inputHeading = finalCamHeading - 90.0
+                end
+                
+                if inputHeading then
+                    -- Apply velocity in the INPUT direction
                     local rad = math.rad(inputHeading)
                     newVelX = newVelX + (-math.sin(rad) * moveSpeed)
                     newVelY = newVelY + (math.cos(rad) * moveSpeed)
-                elseif IsControlPressed(0, 32) then -- W (forward)
-                    inputHeading = finalCamHeading
-                    newVelX = newVelX + (-math.sin(radians) * moveSpeed)
-                    newVelY = newVelY + (math.cos(radians) * moveSpeed)
-                elseif IsControlPressed(0, 33) then -- S (backward)
-                    inputHeading = finalCamHeading + 180.0
-                    newVelX = newVelX - (-math.sin(radians) * moveSpeed)
-                    newVelY = newVelY - (math.cos(radians) * moveSpeed)
-                elseif IsControlPressed(0, 34) then -- A (left)
-                    inputHeading = finalCamHeading + 90.0
-                    newVelX = newVelX - (math.cos(radians) * moveSpeed)
-                    newVelY = newVelY - (math.sin(radians) * moveSpeed)
-                elseif IsControlPressed(0, 35) then -- D (right)
-                    inputHeading = finalCamHeading - 90.0
-                    newVelX = newVelX + (math.cos(radians) * moveSpeed)
-                    newVelY = newVelY + (math.sin(radians) * moveSpeed)
-                end
-                
-                if newVelX ~= vel.x or newVelY ~= vel.y then
+                    
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
                     -- Smoothly rotate character to face INPUT direction
-                    if inputHeading then
-                        local currentHeading = GetEntityHeading(ped)
-                        local diff = inputHeading - currentHeading
-                        
-                        -- Normalize angle difference to -180 to 180
-                        while diff > 180.0 do diff = diff - 360.0 end
-                        while diff < -180.0 do diff = diff + 360.0 end
-                        
-                        -- Smooth interpolation (5.0 = rotation speed, lower = smoother/slower)
-                        local newHeading = currentHeading + (diff * 0.15)
-                        SetEntityHeading(ped, newHeading)
-                    end
+                    local currentHeading = GetEntityHeading(ped)
+                    local diff = inputHeading - currentHeading
+                    
+                    -- Normalize angle difference to -180 to 180
+                    while diff > 180.0 do diff = diff - 360.0 end
+                    while diff < -180.0 do diff = diff + 360.0 end
+                    
+                    -- Smooth interpolation (15% per frame)
+                    local newHeading = currentHeading + (diff * 0.15)
+                    SetEntityHeading(ped, newHeading)
                 end
             end
             
