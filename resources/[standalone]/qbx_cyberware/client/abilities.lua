@@ -263,55 +263,57 @@ CreateThread(function()
             if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 then
                 local vel = GetEntityVelocity(ped)
                 
-                -- MASSIVELY increased air control for fluid movement
-                local moveSpeed = 0.5
+                -- Air control with air friction to reduce slipperiness
+                local moveSpeed = 0.4
+                local airFriction = 0.98 -- Slight slowdown in air
                 local hasInput = false
                 
-                -- Get camera heading for relative controls
+                -- Get camera heading for TRUE camera-relative controls
                 local camHeading = GetGameplayCamRelativeHeading()
                 local pedHeading = GetEntityHeading(ped)
-                local finalCamHeading = camHeading + pedHeading
+                local absoluteCamHeading = camHeading + pedHeading
                 local inputHeading = nil
                 
-                -- Calculate input direction relative to camera
+                -- Calculate input direction relative to CAMERA (not ped)
                 if IsControlPressed(0, 32) and IsControlPressed(0, 34) then -- W+A (forward-left)
-                    inputHeading = finalCamHeading + 45.0
+                    inputHeading = absoluteCamHeading + 45.0
                     hasInput = true
                 elseif IsControlPressed(0, 32) and IsControlPressed(0, 35) then -- W+D (forward-right)
-                    inputHeading = finalCamHeading - 45.0
+                    inputHeading = absoluteCamHeading - 45.0
                     hasInput = true
                 elseif IsControlPressed(0, 33) and IsControlPressed(0, 34) then -- S+A (back-left)
-                    inputHeading = finalCamHeading + 135.0
+                    inputHeading = absoluteCamHeading + 135.0
                     hasInput = true
                 elseif IsControlPressed(0, 33) and IsControlPressed(0, 35) then -- S+D (back-right)
-                    inputHeading = finalCamHeading - 135.0
+                    inputHeading = absoluteCamHeading - 135.0
                     hasInput = true
-                elseif IsControlPressed(0, 32) then -- W (forward)
-                    inputHeading = finalCamHeading
+                elseif IsControlPressed(0, 32) then -- W (camera forward)
+                    inputHeading = absoluteCamHeading
                     hasInput = true
-                elseif IsControlPressed(0, 33) then -- S (backward)
-                    inputHeading = finalCamHeading + 180.0
+                elseif IsControlPressed(0, 33) then -- S (camera backward)
+                    inputHeading = absoluteCamHeading + 180.0
                     hasInput = true
-                elseif IsControlPressed(0, 34) then -- A (left)
-                    inputHeading = finalCamHeading + 90.0
+                elseif IsControlPressed(0, 34) then -- A (camera left)
+                    inputHeading = absoluteCamHeading + 90.0
                     hasInput = true
-                elseif IsControlPressed(0, 35) then -- D (right)
-                    inputHeading = finalCamHeading - 90.0
+                elseif IsControlPressed(0, 35) then -- D (camera right)
+                    inputHeading = absoluteCamHeading - 90.0
                     hasInput = true
                 end
                 
                 if hasInput and inputHeading then
-                    -- ADD to existing velocity (preserve momentum from jump)
+                    -- Add velocity in the CAMERA direction
                     local rad = math.rad(inputHeading)
                     local addVelX = -math.sin(rad) * moveSpeed
                     local addVelY = math.cos(rad) * moveSpeed
                     
-                    local newVelX = vel.x + addVelX
-                    local newVelY = vel.y + addVelY
+                    -- Apply air friction to existing velocity, then add input
+                    local newVelX = (vel.x * airFriction) + addVelX
+                    local newVelY = (vel.y * airFriction) + addVelY
                     
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
-                    -- Smoothly rotate character to face movement direction
+                    -- Smoothly rotate character to face INPUT direction
                     local currentHeading = GetEntityHeading(ped)
                     local diff = inputHeading - currentHeading
                     
@@ -319,9 +321,12 @@ CreateThread(function()
                     while diff > 180.0 do diff = diff - 360.0 end
                     while diff < -180.0 do diff = diff + 360.0 end
                     
-                    -- Faster rotation for more responsive feel
-                    local newHeading = currentHeading + (diff * 0.25)
+                    -- Smooth rotation
+                    local newHeading = currentHeading + (diff * 0.2)
                     SetEntityHeading(ped, newHeading)
+                else
+                    -- No input: apply air friction only
+                    SetEntityVelocity(ped, vel.x * airFriction, vel.y * airFriction, vel.z)
                 end
             end
             
