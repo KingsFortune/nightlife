@@ -145,33 +145,42 @@ CreateThread(function()
             
             -- When we're very close to ground (within 1 meter) and falling fast
             if isFalling and distanceToGround < 1.0 and velocity.z < -3.0 then
+                print('^3[Cyberware]^7 INTERCEPTING LANDING - Distance: '..distanceToGround..'m')
+                
                 -- Preload animation RIGHT NOW
                 local dict = 'move_strafe@roll'
                 local anim = 'combatroll_fwd_p2_00'
                 
                 if not HasAnimDictLoaded(dict) then
+                    print('^3[Cyberware]^7 Loading animation dict...')
                     RequestAnimDict(dict)
                     while not HasAnimDictLoaded(dict) do
                         Wait(0)
                     end
+                    print('^2[Cyberware]^7 Dict loaded!')
                 end
                 
                 -- Wait for the EXACT moment we touch ground
+                print('^3[Cyberware]^7 Waiting for ground contact...')
                 while IsPedFalling(ped) do
                     Wait(0)
                 end
+                
+                print('^2[Cyberware]^7 GROUND CONTACT - FORCING ROLL NOW!')
                 
                 -- INSTANT interrupt and force roll (no delay at all)
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
                 TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 1, 0, false, false, false)
                 
+                print('^2[Cyberware]^7 Roll animation started!')
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
                 -- Clean up after animation
                 Wait(1000)
                 SetPedCanRagdoll(ped, true)
                 didDoubleJump = false
+                print('^2[Cyberware]^7 Roll complete, flag cleared')
             end
         else
             Wait(100)
