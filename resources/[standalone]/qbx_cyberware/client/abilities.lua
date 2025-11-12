@@ -37,6 +37,8 @@ RegisterNetEvent('qbx_cyberware:client:resetCooldowns', function()
 end)
 
 -- KIROSHI OPTICS: Scan nearby player or ped
+local activeScans = {} -- Track highlighted entities
+
 local function KiroshiScan()
     if not HasImplant('kiroshi_optics') then return end
     
@@ -49,86 +51,111 @@ local function KiroshiScan()
     end
     
     local myCoords = GetEntityCoords(cache.ped)
+    local scanRange = implant.effects.scan_range
+    local scannedCount = 0
     
-    -- First try to find a player
-    local player, playerDistance = lib.getClosestPlayer(myCoords, implant.effects.scan_range)
-    
-    if player then
-        -- Scan player
-        local targetId = GetPlayerServerId(player)
-        local targetPed = GetPlayerPed(player)
-        local targetHealth = GetEntityHealth(targetPed)
-        local targetMaxHealth = GetEntityMaxHealth(targetPed)
-        local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
-        
-        -- Request target data from server
-        lib.callback('qbx_cyberware:server:scanTarget', false, function(targetData)
-            if targetData then
-                local scanText = string.format(
-                    '🎯 **Player Scanned**\n' ..
-                    '**Name:** %s %s\n' ..
-                    '**Health:** %d%%\n' ..
-                    '**Job:** %s',
-                    targetData.firstname or 'Unknown',
-                    targetData.lastname or 'Unknown',
-                    healthPercent,
-                    targetData.job or 'Unemployed'
-                )
+    -- Scan all players in range
+    local players = GetActivePlayers()
+    for _, player in ipairs(players) do
+        if player ~= PlayerId() then
+            local targetPed = GetPlayerPed(player)
+            local targetCoords = GetEntityCoords(targetPed)
+            local distance = #(myCoords - targetCoords)
+            
+            if distance <= scanRange then
+                scannedCount = scannedCount + 1
+                local targetId = GetPlayerServerId(player)
+                local targetHealth = GetEntityHealth(targetPed)
+                local targetMaxHealth = GetEntityMaxHealth(targetPed)
+                local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
                 
-                exports.qbx_core:Notify(scanText, 'inform', 5000)
-            else
-                exports.qbx_core:Notify('Scan failed', 'error')
+                -- Highlight player
+                SetEntityDrawOutline(targetPed, true)
+                SetEntityDrawOutlineColor(255, 215, 0, 255) -- Gold outline
+                activeScans[targetPed] = GetGameTimer() + 5000 -- 5 seconds
+                
+                -- Request target data from server
+                lib.callback('qbx_cyberware:server:scanTarget', false, function(targetData)
+                    if targetData then
+                        local scanText = string.format(
+                            '🎯 **Player: %s %s**\n' ..
+                            'Health: %d%% | Job: %s | %.1fm away',
+                            targetData.firstname or 'Unknown',
+                            targetData.lastname or 'Unknown',
+                            healthPercent,
+                            targetData.job or 'Unemployed',
+                            distance
+                        )
+                        
+                        exports.qbx_core:Notify(scanText, 'inform', 5000)
+                    end
+                end, targetId)
             end
-        end, targetId)
-    else
-        -- No player found, scan closest ped instead
-        local closestPed = nil
-        local closestDist = implant.effects.scan_range
-        
-        local peds = GetGamePool('CPed')
-        for _, ped in ipairs(peds) do
-            if ped ~= cache.ped and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
-                local pedCoords = GetEntityCoords(ped)
-                local dist = #(myCoords - pedCoords)
-                if dist < closestDist then
-                    closestPed = ped
-                    closestDist = dist
-                end
-            end
-        end
-        
-        if closestPed then
-            local pedHealth = GetEntityHealth(closestPed)
-            local pedMaxHealth = GetEntityMaxHealth(closestPed)
-            local healthPercent = math.floor((pedHealth / pedMaxHealth) * 100)
-            local pedModel = GetEntityModel(closestPed)
-            local pedName = GetDisplayNameFromVehicleModel(pedModel)
-            
-            -- Get ped type - simplified since no NPC cops
-            local pedType = 'Civilian'
-            if IsPedInAnyVehicle(closestPed, false) then
-                pedType = 'Civilian (in Vehicle)'
-            end
-            
-            local scanText = string.format(
-                '🎯 **NPC Scanned**\n' ..
-                '**Type:** %s\n' ..
-                '**Health:** %d%%\n' ..
-                '**Distance:** %.1fm',
-                pedType,
-                healthPercent,
-                closestDist
-            )
-            
-            exports.qbx_core:Notify(scanText, 'inform', 5000)
-        else
-            exports.qbx_core:Notify('No target in range', 'error')
-            return
         end
     end
     
+    -- Scan all NPCs in range
+    local peds = GetGamePool('CPed')
+    for _, ped in ipairs(peds) do
+        if ped ~= cache.ped and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
+            local pedCoords = GetEntityCoords(ped)
+            local distance = #(myCoords - pedCoords)
+            
+            if distance <= scanRange then
+                scannedCount = scannedCount + 1
+                local pedHealth = GetEntityHealth(ped)
+                local pedMaxHealth = GetEntityMaxHealth(ped)
+                local healthPercent = math.floor((pedHealth / pedMaxHealth) * 100)
+                
+                -- Highlight NPC
+                SetEntityDrawOutline(ped, true)
+                SetEntityDrawOutlineColor(100, 150, 255, 255) -- Blue outline for NPCs
+                activeScans[ped] = GetGameTimer() + 5000 -- 5 seconds
+                
+                -- Get ped type - simplified since no NPC cops
+                local pedType = 'Civilian'
+                if IsPedInAnyVehicle(ped, false) then
+                    pedType = 'Civilian (in Vehicle)'
+                end
+                
+                local scanText = string.format(
+                    '🎯 **NPC: %s**\n' ..
+                    'Health: %d%% | %.1fm away',
+                    pedType,
+                    healthPercent,
+                    distance
+                )
+                
+                exports.qbx_core:Notify(scanText, 'inform', 3000)
+            end
+        end
+    end
+    
+    if scannedCount == 0 then
+        exports.qbx_core:Notify('No targets in range', 'error')
+        return
+    end
+    
+    exports.qbx_core:Notify(string.format('📡 Scanned %d targets', scannedCount), 'success', 2000)
     SetCooldown('kiroshi_optics', implant.cooldown)
 end
+
+-- Thread to manage scan highlights
+CreateThread(function()
+    while true do
+        Wait(100)
+        
+        local currentTime = GetGameTimer()
+        for entity, endTime in pairs(activeScans) do
+            if currentTime >= endTime then
+                if DoesEntityExist(entity) then
+                    SetEntityDrawOutline(entity, false)
+                end
+                activeScans[entity] = nil
+            end
+        end
+    end
+end)
 
 -- ADRENALINE BOOSTER: Activate boost
 local function AdrenalineBoost()
@@ -295,8 +322,8 @@ CreateThread(function()
                     SetTimeout(120, function()
                         local p = PlayerPedId()
                         local v = GetEntityVelocity(p)
-                        SetEntityVelocity(p, v.x, v.y, 15.0)
-                        print('^2[Cyberware]^7 First jump boost applied (15.0)')
+                        SetEntityVelocity(p, v.x, v.y, 10.0) -- Reduced from 15.0
+                        print('^2[Cyberware]^7 First jump boost applied (10.0)')
                         
                         -- Clear isJumpingNow after 2 seconds to allow landing detection
                         SetTimeout(2000, function()
@@ -315,7 +342,7 @@ CreateThread(function()
                     print('^2[Cyberware]^7 Executing DOUBLE JUMP')
                     
                     local v = GetEntityVelocity(ped)
-                    SetEntityVelocity(ped, v.x, v.y, 20.0)
+                    SetEntityVelocity(ped, v.x, v.y, 25.0) -- Increased from 20.0
                     
                     -- Disable ragdoll for 4 seconds after double jump
                     disableRagdollUntil = GetGameTimer() + 4000
