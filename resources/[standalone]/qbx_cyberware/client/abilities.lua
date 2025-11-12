@@ -171,9 +171,7 @@ CreateThread(function()
                 
                 -- CAPTURE VELOCITY before we lose it
                 local velocity = GetEntityVelocity(ped)
-                local horizontalVel = vector2(velocity.x, velocity.y)
-                local speed = #horizontalVel
-                print('^3[Cyberware]^7 Captured velocity - Speed: '..speed)
+                print('^3[Cyberware]^7 Captured velocity - X: '..velocity.x..' Y: '..velocity.y)
                 
                 local dict = 'move_strafe@roll'
                 local animStart = 'combatroll_fwd_p1_00'  -- Roll down
@@ -189,29 +187,21 @@ CreateThread(function()
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Chain animations and MAINTAIN MOMENTUM
+                -- Quick roll with momentum restoration
                 CreateThread(function()
                     local rollPed = PlayerPedId()
                     
-                    -- Keep applying velocity during roll to maintain momentum
-                    local rollStart = GetGameTimer()
-                    while GetGameTimer() - rollStart < 300 do
-                        SetEntityVelocity(rollPed, velocity.x, velocity.y, 0.0)
-                        Wait(0)
-                    end
+                    -- Let roll down play briefly
+                    Wait(250)
                     
-                    TaskPlayAnim(rollPed, dict, animEnd, 8.0, -8.0, -1, 0, 0, false, false, false)
-                    print('^2[Cyberware]^7 Roll recovery animation playing!')
-                    
-                    -- Continue momentum during recovery
-                    local recoveryStart = GetGameTimer()
-                    while GetGameTimer() - recoveryStart < 150 do
-                        SetEntityVelocity(rollPed, velocity.x, velocity.y, 0.0)
-                        Wait(0)
-                    end
-                    
+                    -- CUT the animation short and restore control immediately
+                    ClearPedTasksImmediately(rollPed)
                     SetPedCanRagdoll(rollPed, true)
-                    print('^2[Cyberware]^7 Roll complete - movement restored')
+                    
+                    -- RESTORE VELOCITY immediately
+                    SetEntityVelocity(rollPed, velocity.x, velocity.y, 0.0)
+                    
+                    print('^2[Cyberware]^7 Roll complete - control restored with momentum')
                 end)
             end
         else
