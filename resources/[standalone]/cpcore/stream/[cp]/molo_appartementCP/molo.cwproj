@@ -1,0 +1,72 @@
+<CodeWalkerProject>
+  <Name>New CodeWalker Project</Name>
+  <Version value="1" />
+  <YmapFilenames>
+    <Item>molo_appartementcp_milo_.ymap</Item>
+    <Item>hei_dt1_occl_07.ymap</Item>
+    <Item>hei_dt1_occl_06.ymap</Item>
+    <Item>hei_dt1_03_interior_dt1_03_carpark.ymap</Item>
+  </YmapFilenames>
+  <YtypFilenames>
+    <Item>molo_appartementcp.ytyp</Item>
+    <Item>dt1_03_interior_dt1_03_carpark.ytyp</Item>
+  </YtypFilenames>
+  <YbnFilenames>
+    <Item>molo_cpa_col.ybn</Item>
+    <Item>dt1_06_0.ybn</Item>
+    <Item>dt1_03_carpark.ybn</Item>
+  </YbnFilenames>
+  <YndFilenames />
+  <YnvFilenames />
+  <TrainsFilenames />
+  <ScenarioFilenames />
+  <AudioRelFilenames />
+  <YdrFilenames>
+    <Item>molo_yellow_lighty.ydr</Item>
+    <Item>molo_yellow_light.ydr</Item>
+    <Item>molo_taxi_lightbl.ydr</Item>
+    <Item>molo_fc_lightint.ydr</Item>
+    <Item>molo_cpa_womandet2.ydr</Item>
+    <Item>molo_cpa_woman_meuble.ydr</Item>
+    <Item>molo_cpa_woman_arcade.ydr</Item>
+    <Item>molo_cpa_win3.ydr</Item>
+    <Item>molo_cpa_win2.ydr</Item>
+    <Item>molo_cpa_win1.ydr</Item>
+    <Item>molo_cpa_table.ydr</Item>
+    <Item>molo_cpa_sunlight.ydr</Item>
+    <Item>molo_cpa_smoke.ydr</Item>
+    <Item>molo_cpa_shell.ydr</Item>
+    <Item>molo_cpa_props2.ydr</Item>
+    <Item>molo_cpa_props1.ydr</Item>
+    <Item>molo_cpa_pipes.ydr</Item>
+    <Item>molo_cpa_parking_plant.ydr</Item>
+    <Item>molo_cpa_parking_det.ydr</Item>
+    <Item>molo_cpa_palmar.ydr</Item>
+    <Item>molo_cpa_metal.ydr</Item>
+    <Item>molo_cpa_luxe_panel.ydr</Item>
+    <Item>molo_cpa_luxe_gun.ydr</Item>
+    <Item>molo_cpa_luxe_app.ydr</Item>
+    <Item>molo_cpa_lobby_det.ydr</Item>
+    <Item>molo_cpa_lightpink.ydr</Item>
+    <Item>molo_cpa_lamp.ydr</Item>
+    <Item>molo_cpa_hackergun.ydr</Item>
+    <Item>molo_cpa_gamaro.ydr</Item>
+    <Item>molo_cpa_frame.ydr</Item>
+    <Item>molo_cpa_flower.ydr</Item>
+    <Item>molo_cpa_det1.ydr</Item>
+    <Item>molo_cpa_couloir_decals.ydr</Item>
+    <Item>molo_cpa_blind.ydr</Item>
+    <Item>molo_cpa_bed.ydr</Item>
+    <Item>fox_metro_advertstand2.ydr</Item>
+    <Item>dt1_03_detailint.ydr</Item>
+    <Item>dt1_03_detail3int.ydr</Item>
+    <Item>dt1_03_detail3b.ydr</Item>
+    <Item>dt1_03_detail2int.ydr</Item>
+    <Item>dt1_03_carparkint.ydr</Item>
+    <Item>dt1_03_carparkextras.ydr</Item>
+    <Item>dt1_03_carparkentrance.ydr</Item>
+  </YdrFilenames>
+  <YddFilenames />
+  <YftFilenames />
+  <YtdFilenames />
+</CodeWalkerProject>

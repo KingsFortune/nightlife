@@ -231,6 +231,15 @@ RegisterCommand('seatbelt', function()
 end
 end, false)
 
+-- Listen for qbx_seatbelt events
+RegisterNetEvent('seatbelt:client:ToggleSeatbelt', function()
+    if IsPedInAnyVehicle(PlayerPed, false) then
+        local playerState = LocalPlayer.state
+        -- Update HUD based on qbx_seatbelt state
+        seatbeltOn = playerState.seatbelt or playerState.harness or false
+    end
+end)
+
 local speedBuffer, velBuffer  = {0.0,0.0}, {}
 Citizen.CreateThread(function()
     local wait

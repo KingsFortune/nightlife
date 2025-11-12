@@ -1,0 +1,14 @@
+Hi and thank's for buy the cyberpunk appartement.
+
+
+Location of the appartement : -13.96142, -687.2025, 156.5035
+Location of the parking and the lobby : -16.29585, -684.0385, 33.50832
+
+
+Name doors : 
+molo_cpa_door1
+molo_cpa_door2
+molo_cpa_door3
+molo_cpa_door4
+
+Include a elevator script !

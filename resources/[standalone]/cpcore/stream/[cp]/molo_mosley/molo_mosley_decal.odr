@@ -1,0 +1,177 @@
+Version 165 32
+{
+	Shaders
+	{
+		decal.sps
+		{
+			DiffuseSampler molo_mosley_decal\grrr.otx
+			SpecularFalloffMult 100.0000000
+			SpecularFresnel 0.9700000
+			SpecularIntensityMult 0.0000000
+			UseTessellation 0.0000000
+		}
+		normal_spec_tnt.sps
+		{
+			BumpSampler molo_mosley_decal\nxg_dc_interior_floor_tiles_01_n.otx
+			DiffuseSampler molo_mosley_decal\dc_interior_floor_tiles_01.otx
+			SpecSampler molo_mosley_decal\dc_interior_floor_tiles_01_s.otx
+			TintPaletteSampler molo_mosley_decal\v_15_cars_shell_pal.otx
+			Bumpiness 0.1500000
+			HardAlphaBlend 1.0000000
+			SpecMapIntMask 1.0000000 0.0000000 0.0000000
+			SpecularFalloffMult 200.0000000
+			SpecularFresnel 0.9700000
+			SpecularIntensityMult 1.0000000
+			TintPaletteSelector 0.0000000 0.0000000
+			UseTessellation 0.0000000
+		}
+		decal.sps
+		{
+			DiffuseSampler molo_mosley_decal\reddd.otx
+			SpecularFalloffMult 100.0000000
+			SpecularFresnel 0.9700000
+			SpecularIntensityMult 0.0000000
+			UseTessellation 0.0000000
+		}
+		normal_cutout.sps
+		{
+			BumpSampler molo_mosley_decal\jd_garage_grid_decal_01_nrmjd_garage_grid_decal_01_alpha.otx
+			DiffuseSampler molo_mosley_decal\jd_garage_grid_decal_01jd_garage_grid_decal_01_alpha.otx
+			Bumpiness 1.0000000
+			HardAlphaBlend 0.0000000
+			SpecularFalloffMult 320.0000000
+			SpecularFresnel 0.9350000
+			SpecularIntensityMult 0.2000000
+			UseTessellation 0.0000000
+		}
+		normal_cutout.sps
+		{
+			BumpSampler molo_mosley_decal\jd_drain_decal_01_nrmjd_drain_decal_01_alpha.otx
+			DiffuseSampler molo_mosley_decal\jd_drain_decal_01jd_drain_decal_01_alpha.otx
+			Bumpiness 1.0000000
+			HardAlphaBlend 1.0000000
+			SpecularFalloffMult 75.0000000
+			SpecularFresnel 0.6000000
+			SpecularIntensityMult 0.3000000
+			UseTessellation 0.0000000
+		}
+		normal_cutout.sps
+		{
+			BumpSampler molo_mosley_decal\jd_garage_grid_decal_02_nrmjd_garage_grid_decal_02_alpha.otx
+			DiffuseSampler molo_mosley_decal\jd_garage_grid_decal_02jd_garage_grid_decal_02_alpha.otx
+			Bumpiness 1.0000000
+			HardAlphaBlend 0.0000000
+			SpecularFalloffMult 30.0000000
+			SpecularFresnel 0.6000000
+			SpecularIntensityMult 0.3000000
+			UseTessellation 0.0000000
+		}
+		normal_cutout.sps
+		{
+			BumpSampler molo_mosley_decal\jd_garage_grid_decal_03_nrmjd_garage_grid_decal_03_alpha.otx
+			DiffuseSampler molo_mosley_decal\jd_garage_grid_decal_03jd_garage_grid_decal_03_alpha.otx
+			Bumpiness 1.0000000
+			HardAlphaBlend 1.0000000
+			SpecularFalloffMult 100.0000000
+			SpecularFresnel 0.9700000
+			SpecularIntensityMult 0.1250000
+			UseTessellation 0.0000000
+		}
+		normal_decal.sps
+		{
+			BumpSampler molo_mosley_decal\jd_cracks_decal_nrm.otx
+			DiffuseSampler molo_mosley_decal\jd_cracks_decaljd_cracks_decal_alpha.otx
+			Bumpiness 2.0000000
+			SpecularFalloffMult 0.0000000
+			SpecularFresnel 0.9700000
+			SpecularIntensityMult 0.0000000
+			UseTessellation 0.0000000
+		}
+		normal_decal.sps
+		{
+			BumpSampler molo_mosley_decal\jd_concrete_patches_nrm.otx
+			DiffuseSampler molo_mosley_decal\jd_concrete_patchesjd_concrete_patches_alpha.otx
+			Bumpiness 1.0000000
+			SpecularFalloffMult 200.0000000
+			SpecularFresnel 0.7500000
+			SpecularIntensityMult 0.2500000
+			UseTessellation 0.0000000
+		}
+		normal_decal.sps
+		{
+			BumpSampler molo_mosley_decal\jd_paint_line_nrmjd_paint_line_alpha.otx
+			DiffuseSampler molo_mosley_decal\jd_paint_linejd_paint_line_alpha.otx
+			Bumpiness 1.0000000
+			SpecularFalloffMult 200.0000000
+			SpecularFresnel 0.7500000
+			SpecularIntensityMult 0.2500000
+			UseTessellation 0.0000000
+		}
+		decal.sps
+		{
+			DiffuseSampler molo_mosley_decal\gz_v_cs_floordirtgz_v_cs_floordirt_a.otx
+			SpecularFalloffMult 100.0000000
+			SpecularFresnel 0.9700000
+			SpecularIntensityMult 0.0000000
+			UseTessellation 0.0000000
+		}
+		decal.sps
+		{
+			DiffuseSampler molo_mosley_decal\ah_waremed_paint_walls2ah_waremed_paint_wallsa.otx
+			SpecularFalloffMult 50.0000000
+			SpecularFresnel 0.9700000
+			SpecularIntensityMult 0.8000000
+			UseTessellation 0.0000000
+		}
+		normal_spec_decal.sps
+		{
+			BumpSampler molo_mosley_decal\ah_hangpudrk_n.otx
+			DiffuseSampler molo_mosley_decal\ah_hangpudrk.otx
+			SpecSampler molo_mosley_decal\ah_hangpudrk_s.otx
+			Bumpiness 1.0000000
+			SpecMapIntMask 1.0000000 0.0000000 0.0000000
+			SpecularFalloffMult 360.0000000
+			SpecularFresnel 0.5000000
+			SpecularIntensityMult 0.5000000
+			UseTessellation 0.0000000
+		}
+		decal.sps
+		{
+			DiffuseSampler molo_mosley_decal\ah_big_dampah_big_damp_a.otx
+			SpecularFalloffMult 50.0000000
+			SpecularFresnel 0.9000000
+			SpecularIntensityMult 0.2000000
+			UseTessellation 0.0000000
+		}
+		normal_spec_decal.sps
+		{
+			BumpSampler molo_mosley_decal\ah_jd_cracks_decaln.otx
+			DiffuseSampler molo_mosley_decal\ah_jd_cracks_decalah_jd_cracks_decal_alpha.otx
+			SpecSampler molo_mosley_decal\ah_jd_cracks_decal_alpha.otx
+			Bumpiness 1.0000000
+			SpecMapIntMask 1.0000000 0.0000000 0.0000000
+			SpecularFalloffMult 50.0000000
+			SpecularFresnel 0.9000000
+			SpecularIntensityMult 0.2000000
+			UseTessellation 0.0000000
+		}
+	}
+	Skeleton null
+	LodGroup
+	{
+		High 9998.0
+		{
+			molo_mosley_decal\Line002.mesh 0
+		}
+		Med 9998.0
+		Low 9998.0
+		Vlow 9998.0
+		AABBMin -11.0945196 -18.0418091 -5.9389319
+		AABBMax 27.8297691 15.5390100 0.9619503
+		Radius 25.9345
+		Center 8.3676252 -1.2514000 -2.4884908
+	}
+	Light null
+	Bound null
+	Joints null
+}

@@ -1,0 +1,17 @@
+<CodeWalkerProject>
+  <Name>New CodeWalker Project</Name>
+  <Version value="1" />
+  <YmapFilenames>
+    <Item>molo_al_milo.ymap</Item>
+  </YmapFilenames>
+  <YtypFilenames>
+    <Item>molo_al.ytyp</Item>
+    <Item>molo_al_props.ytyp</Item>
+  </YtypFilenames>
+  <YbnFilenames />
+  <YndFilenames />
+  <YnvFilenames />
+  <TrainsFilenames />
+  <ScenarioFilenames />
+  <AudioRelFilenames />
+</CodeWalkerProject>
