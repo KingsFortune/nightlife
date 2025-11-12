@@ -74,7 +74,7 @@ function ActivateKiroshiScan()
     
     kiroshiActive = true
     SendNUIMessage({
-        action = 'toggleActive',
+        action = 'toggle',
         active = true
     })
     
@@ -87,7 +87,7 @@ function DeactivateKiroshiScan()
     targetedEntity = nil
     
     SendNUIMessage({
-        action = 'toggleActive',
+        action = 'toggle',
         active = false
     })
     
@@ -135,17 +135,25 @@ CreateThread(function()
                     local targetMaxHealth = GetEntityMaxHealth(entityHit)
                     local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
                     
-                    -- Get screen position for box placement (center of ped)
+                    -- Get screen position for box placement
                     local entityCoords = GetEntityCoords(entityHit)
                     local minDim, maxDim = GetModelDimensions(GetEntityModel(entityHit))
-                    local centerHeight = (minDim.z + maxDim.z) / 2
-                    local centerPos = vector3(entityCoords.x, entityCoords.y, entityCoords.z + centerHeight)
                     
-                    local onScreen, screenX, screenY = GetScreenCoordFromWorldCoord(centerPos.x, centerPos.y, centerPos.z)
+                    -- Calculate box dimensions on screen
+                    local headPos = vector3(entityCoords.x, entityCoords.y, entityCoords.z + maxDim.z)
+                    local feetPos = vector3(entityCoords.x, entityCoords.y, entityCoords.z + minDim.z)
                     
-                    if onScreen then
+                    local onScreenHead, headX, headY = GetScreenCoordFromWorldCoord(headPos.x, headPos.y, headPos.z)
+                    local onScreenFeet, feetX, feetY = GetScreenCoordFromWorldCoord(feetPos.x, feetPos.y, feetPos.z)
+                    
+                    if onScreenHead and onScreenFeet then
                         -- Convert to pixel coordinates
                         local resX, resY = GetActiveScreenResolution()
+                        
+                        local boxHeight = math.abs(math.floor(feetY * resY) - math.floor(headY * resY))
+                        local boxWidth = math.floor(boxHeight * 0.5) -- Width is 50% of height
+                        local boxX = math.floor(headX * resX) - (boxWidth / 2)
+                        local boxY = math.floor(headY * resY)
                         
                         if isPlayer then
                             -- Get player data from server
@@ -162,8 +170,10 @@ CreateThread(function()
                                                 gang = playerData.gang or 'None',
                                                 health = healthPercent,
                                                 distance = string.format("%.1f", distance),
-                                                x = math.floor(screenX * resX),
-                                                y = math.floor(screenY * resY)
+                                                boxX = boxX,
+                                                boxY = boxY,
+                                                boxWidth = boxWidth,
+                                                boxHeight = boxHeight
                                             }
                                         })
                                     end
@@ -176,10 +186,13 @@ CreateThread(function()
                                 target = {
                                     isPlayer = false,
                                     name = 'NPC',
+                                    job = 'Civilian',
                                     health = healthPercent,
                                     distance = string.format("%.1f", distance),
-                                    x = math.floor(screenX * resX),
-                                    y = math.floor(screenY * resY)
+                                    boxX = boxX,
+                                    boxY = boxY,
+                                    boxWidth = boxWidth,
+                                    boxHeight = boxHeight
                                 }
                             })
                         end

@@ -1,5 +1,4 @@
-/* Kiroshi Optics - Cyberpunk Style (es_cyberhud inspired) */
-@import url('https://fonts.googleapis.com/css2?family=Tomorrow:wght@400;500;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@300;400;500;600;700&display=swap');
 
 * {
     margin: 0;
@@ -8,565 +7,204 @@
 }
 
 body {
-    font-family: 'Tomorrow', sans-serif;
+    font-family: 'Rajdhani', sans-serif;
     overflow: hidden;
     background: transparent;
+    width: 100vw;
+    height: 100vh;
 }
 
 #kiroshi-overlay {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100vw;
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     pointer-events: none;
-    z-index: 9999;
-    display: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 #kiroshi-overlay.active {
-    display: block;
+    opacity: 1;
 }
 
-/* Scan lines effect */
-.scan-lines {
+/* ===== CROSSHAIR (CENTER) ===== */
+.crosshair {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(255, 215, 0, 0.05) 0px,
-        rgba(255, 215, 0, 0.05) 1px,
-        transparent 1px,
-        transparent 3px
-    );
-    animation: scan 4s linear infinite;
-    pointer-events: none;
-}
-
-@keyframes scan {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(12px); }
-}
-
-/* Corner UI elements */
-.corner {
-    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     width: 40px;
     height: 40px;
-    border: 3px solid rgba(255, 215, 0, 0.8);
-    z-index: 10000;
 }
 
-.top-left {
-    top: 20px;
-    left: 20px;
-    border-right: none;
-    border-bottom: none;
-}
-
-.top-right {
-    top: 20px;
-    right: 20px;
-    border-left: none;
-    border-bottom: none;
-}
-
-.bottom-left {
-    bottom: 20px;
-    left: 20px;
-    border-right: none;
-    border-top: none;
-}
-
-.bottom-right {
-    bottom: 20px;
-    right: 20px;
-    border-left: none;
-    border-top: none;
-}
-
-/* Status indicator */
-.status-indicator {
+.crosshair-dot {
     position: absolute;
-    top: 30px;
-    right: 70px;
-    background: rgba(0, 0, 0, 0.8);
-    border: 2px solid rgba(255, 215, 0, 0.8);
-    padding: 10px 15px;
-    min-width: 180px;
-    z-index: 10000;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 3px;
+    height: 3px;
+    background: #FCEE0C;
+    border-radius: 50%;
+    box-shadow: 0 0 6px #FCEE0C;
 }
 
-.status-text {
-    color: #FFD700;
-    font-size: 14px;
-    font-weight: bold;
-    letter-spacing: 3px;
-    margin-bottom: 8px;
-}
-
-.status-bar {
-    width: 100%;
-    height: 6px;
-    background: rgba(255, 215, 0, 0.3);
-    border-radius: 3px;
-    overflow: hidden;
-}
-
-.status-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #FFD700, #FFA500);
-    animation: pulse 1.5s ease-in-out infinite;
-    width: 100%;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 0.7; }
-    50% { opacity: 1; }
-}
-
-/* Entity markers container */
-#entity-markers {
+.crosshair-line {
     position: absolute;
+    background: #FCEE0C;
+    box-shadow: 0 0 4px #FCEE0C;
+}
+
+.crosshair-top {
     top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 9999;
-    pointer-events: none;
-}
-
-.entity-wrapper {
-    position: absolute;
-    pointer-events: none;
-}
-
-/* Entity info panel */
-.entity-info {
-    background: rgba(0, 0, 0, 0.95);
-    border: 2px solid;
-    padding: 12px 15px;
-    min-width: 220px;
-    max-width: 280px;
-    backdrop-filter: blur(8px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8);
-    position: relative;
-    white-space: nowrap;
-}
-
-.entity-info.player {
-    border-color: rgba(255, 215, 0, 0.8);
-    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
-}
-
-.entity-info.npc {
-    border-color: rgba(100, 150, 255, 0.8);
-    box-shadow: 0 0 15px rgba(100, 150, 255, 0.4);
-}
-
-/* Distance indicator */
-.distance-indicator {
-    position: absolute;
-    top: -25px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.9);
-    border: 1px solid;
-    padding: 2px 8px;
-    font-size: 10px;
-    font-weight: bold;
-    border-radius: 3px;
-    white-space: nowrap;
-}
-
-.entity-info.player .distance-indicator {
-    border-color: rgba(255, 215, 0, 0.8);
-    color: #FFD700;
-}
-
-.entity-info.npc .distance-indicator {
-    border-color: rgba(100, 150, 255, 0.8);
-    color: #6496FF;
-}
-
-.info-header {
-    font-size: 13px;
-    font-weight: bold;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-    text-transform: uppercase;
-}
-
-.info-header.player {
-    color: #FFD700;
-}
-
-.info-header.npc {
-    color: #6496FF;
-}
-
-.info-row {
-    display: flex;
-    justify-content: space-between;
-    font-size: 11px;
-    margin-bottom: 4px;
-    color: #CCCCCC;
-    gap: 15px;
-}
-
-.info-label {
-    color: #888;
-    text-transform: uppercase;
-    font-size: 10px;
-}
-
-.info-value {
-    color: #FFF;
-    font-weight: bold;
-}
-
-/* Health bar */
-.health-bar {
-    width: 100%;
+    width: 2px;
     height: 8px;
-    background: rgba(255, 0, 0, 0.3);
-    border-radius: 4px;
-    overflow: hidden;
-    margin-top: 8px;
-    border: 1px solid rgba(255, 0, 0, 0.5);
 }
 
-.health-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
-    background-size: 200% 100%;
-    transition: width 0.3s ease;
+.crosshair-bottom {
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 8px;
 }
 
-/* Distance indicator */
-.distance-indicator {
-    position: absolute;
-    top: -25px;
-    right: 0;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 3px 8px;
-    border-radius: 3px;
-    font-size: 10px;
-    font-weight: bold;
-    color: #FFD700;
-    border: 1px solid rgba(255, 215, 0, 0.5);
-}
-
-
-/* Scan lines effect */
-.scan-lines {
-    position: absolute;
-    top: 0;
+.crosshair-left {
     left: 0;
-    width: 100%;
-    height: 100%;
-    background: repeating-linear-gradient(
-        0deg,
-        rgba(255, 215, 0, 0.03) 0px,
-        rgba(255, 215, 0, 0.03) 1px,
-        transparent 1px,
-        transparent 2px
-    );
-    animation: scan 8s linear infinite;
-    pointer-events: none;
-}
-
-@keyframes scan {
-    0% { transform: translateY(0); }
-    100% { transform: translateY(20px); }
-}
-
-/* Corner UI elements */
-.corner {
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    border: 2px solid rgba(255, 215, 0, 0.6);
-}
-
-.top-left {
-    top: 20px;
-    left: 20px;
-    border-right: none;
-    border-bottom: none;
-}
-
-.top-right {
-    top: 20px;
-    right: 20px;
-    border-left: none;
-    border-bottom: none;
-}
-
-.bottom-left {
-    bottom: 20px;
-    left: 20px;
-    border-right: none;
-    border-top: none;
-}
-
-.bottom-right {
-    bottom: 20px;
-    right: 20px;
-    border-left: none;
-    border-top: none;
-}
-
-/* Status indicator */
-.status-indicator {
-    position: absolute;
-    top: 30px;
-    right: 60px;
-    background: rgba(0, 0, 0, 0.7);
-    border: 1px solid rgba(255, 215, 0, 0.6);
-    padding: 8px 12px;
-    min-width: 150px;
-}
-
-.status-text {
-    color: #FFD700;
-    font-size: 12px;
-    letter-spacing: 2px;
-    margin-bottom: 5px;
-}
-
-.status-bar {
-    width: 100%;
-    height: 4px;
-    background: rgba(255, 215, 0, 0.2);
-    border-radius: 2px;
-    overflow: hidden;
-}
-
-.status-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #FFD700, #FFA500);
-    animation: pulse 2s ease-in-out infinite;
-}
-
-@keyframes pulse {
-    0%, 100% { opacity: 0.6; }
-    50% { opacity: 1; }
-}
-
-/* Entity markers */
-#entity-markers {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.entity-marker {
-    position: absolute;
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    animation: fadeIn 0.3s ease-in;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: scale(0.8); }
-    to { opacity: 1; transform: scale(1); }
-}
-
-/* Outline box around target */
-.outline-box {
-    position: absolute;
-    width: 120px;
-    height: 160px;
-    border: 2px solid;
-    box-shadow: 0 0 20px;
-    animation: borderPulse 2s ease-in-out infinite;
-}
-
-.outline-box.player {
-    border-color: rgba(255, 215, 0, 0.9);
-    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.2);
-}
-
-.outline-box.npc {
-    border-color: rgba(100, 150, 255, 0.9);
-    box-shadow: 0 0 20px rgba(100, 150, 255, 0.6), inset 0 0 20px rgba(100, 150, 255, 0.2);
-}
-
-@keyframes borderPulse {
-    0%, 100% { opacity: 0.6; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.02); }
-}
-
-/* Outline box corners */
-.outline-box::before,
-.outline-box::after {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    border: 3px solid;
-}
-
-.outline-box::before {
-    top: -2px;
-    left: -2px;
-    border-right: none;
-    border-bottom: none;
-}
-
-.outline-box::after {
-    bottom: -2px;
-    right: -2px;
-    border-left: none;
-    border-top: none;
-}
-
-.outline-box.player::before,
-.outline-box.player::after {
-    border-color: #FFD700;
-}
-
-.outline-box.npc::before,
-.outline-box.npc::after {
-    border-color: #6496FF;
-}
-
-/* Outline box - top right and bottom left corners */
-.outline-box {
-    &::before {
-        content: '';
-        position: absolute;
-        width: 20px;
-        height: 20px;
-        border: 3px solid;
-        top: -2px;
-        left: -2px;
-        border-right: none;
-        border-bottom: none;
-    }
-}
-
-/* Rotating diamond marker */
-.entity-outline {
-    position: relative;
+    top: 50%;
+    transform: translateY(-50%);
     width: 8px;
-    height: 8px;
-    border: 2px solid;
-    transform: rotate(45deg);
-    animation: rotate 3s linear infinite;
+    height: 2px;
 }
 
-.entity-outline.player {
-    border-color: #FFD700;
-    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+.crosshair-right {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 8px;
+    height: 2px;
 }
 
-.entity-outline.npc {
-    border-color: #6496FF;
-    box-shadow: 0 0 10px rgba(100, 150, 255, 0.6);
+/* ===== TARGET OUTLINE BOX ===== */
+#target-outline {
+    position: absolute;
+    border: 2px solid #FCEE0C;
+    box-shadow: 0 0 10px rgba(252, 238, 12, 0.4);
+    pointer-events: none;
+    transition: all 0.1s ease;
 }
 
-@keyframes rotate {
-    from { transform: rotate(45deg); }
-    to { transform: rotate(405deg); }
+#target-outline.hidden {
+    display: none;
 }
 
-/* Info panel */
-.entity-info {
+#target-outline.npc {
+    border-color: #2EFFFF;
+    box-shadow: 0 0 10px rgba(46, 255, 255, 0.4);
+}
+
+/* ===== TARGET INFO BOX ===== */
+#target-info {
+    position: absolute;
     background: rgba(0, 0, 0, 0.85);
-    border: 1px solid;
+    border: 1px solid #FCEE0C;
+    border-left: 3px solid #FCEE0C;
     padding: 8px 12px;
-    min-width: 180px;
-    backdrop-filter: blur(4px);
+    min-width: 200px;
+    box-shadow: 0 0 15px rgba(252, 238, 12, 0.3);
+    transition: all 0.15s ease;
 }
 
-.entity-info.player {
-    border-color: rgba(255, 215, 0, 0.6);
+#target-info.hidden {
+    display: none;
 }
 
-.entity-info.npc {
-    border-color: rgba(100, 150, 255, 0.6);
+#target-info.npc {
+    border-color: #2EFFFF;
+    border-left-color: #2EFFFF;
+    box-shadow: 0 0 15px rgba(46, 255, 255, 0.3);
+}
+
+#target-info.npc .info-header,
+#target-info.npc .info-label {
+    color: #2EFFFF;
 }
 
 .info-header {
-    font-size: 11px;
-    font-weight: bold;
+    color: #FCEE0C;
+    font-size: 16px;
+    font-weight: 600;
     letter-spacing: 1px;
     margin-bottom: 6px;
     text-transform: uppercase;
+    text-shadow: 0 0 8px currentColor;
 }
 
-.info-header.player {
-    color: #FFD700;
+.info-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
 }
 
-.info-header.npc {
-    color: #6496FF;
-}
-
-.info-row {
+.info-line {
     display: flex;
     justify-content: space-between;
-    font-size: 10px;
-    margin-bottom: 3px;
-    color: #CCCCCC;
+    align-items: center;
+    gap: 12px;
 }
 
 .info-label {
-    color: #888;
+    color: #FCEE0C;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
     text-transform: uppercase;
-    font-size: 9px;
+    opacity: 0.8;
 }
 
 .info-value {
-    color: #FFF;
-    font-weight: bold;
+    color: #FFFFFF;
+    font-size: 13px;
+    font-weight: 400;
+    text-align: right;
 }
 
-/* Health bar */
+/* ===== HEALTH BAR ===== */
+.health-line {
+    margin-top: 2px;
+}
+
 .health-bar {
-    width: 100%;
-    height: 6px;
-    background: rgba(255, 0, 0, 0.2);
-    border-radius: 3px;
+    position: relative;
+    width: 120px;
+    height: 16px;
+    background: rgba(0, 0, 0, 0.6);
+    border: 1px solid rgba(252, 238, 12, 0.3);
     overflow: hidden;
-    margin-top: 5px;
-    border: 1px solid rgba(255, 0, 0, 0.4);
 }
 
-.health-bar-fill {
-    height: 100%;
-    background: linear-gradient(90deg, #ff0000, #00ff00);
-    transition: width 0.3s ease;
-}
-
-/* Distance indicator */
-.distance-indicator {
+.health-fill {
     position: absolute;
-    top: -18px;
-    right: 0;
-    background: rgba(0, 0, 0, 0.7);
-    padding: 2px 6px;
-    border-radius: 2px;
-    font-size: 9px;
-    color: #FFD700;
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: linear-gradient(90deg, #FCEE0C 0%, #FFD700 100%);
+    transition: width 0.3s ease;
+    box-shadow: 0 0 8px rgba(252, 238, 12, 0.6);
 }
 
-/* Glitch effect for data values */
-.glitch {
-    animation: glitch 0.3s ease-in-out;
-}
-
-@keyframes glitch {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-2px); }
-    75% { transform: translateX(2px); }
+.health-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 600;
+    text-shadow: 0 0 3px #000000;
+    z-index: 1;
 }
