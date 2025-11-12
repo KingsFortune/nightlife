@@ -39,7 +39,7 @@ function generateNPCData(entityId) {
 }
 
 // Store generated data to keep it consistent
-const entityDataCache = {};
+let entityDataCache = {};
 
 // Main overlay state
 let overlayActive = false;
@@ -96,10 +96,15 @@ function updateMarkers() {
         // Create marker element
         const marker = document.createElement('div');
         marker.className = 'entity-marker';
-        marker.style.left = `${entity.x}px`;
-        marker.style.top = `${entity.y}px`;
+        marker.style.left = `${entity.x - 60}px`; // Center the outline box
+        marker.style.top = `${entity.y - 80}px`; // Position above target
         
-        // Create outline
+        // Create outline box (surrounds the target visually)
+        const outlineBox = document.createElement('div');
+        outlineBox.className = `outline-box ${entity.isPlayer ? 'player' : 'npc'}`;
+        marker.appendChild(outlineBox);
+        
+        // Create rotating diamond marker
         const outline = document.createElement('div');
         outline.className = `entity-outline ${entity.isPlayer ? 'player' : 'npc'}`;
         marker.appendChild(outline);

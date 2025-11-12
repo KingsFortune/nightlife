@@ -153,9 +153,10 @@ CreateThread(function()
                 -- If we did a double jump and just landed, trigger roll
                 if didDoubleJump then
                     print('^2[Cyberware]^7 Triggering landing roll after double jump')
-                    -- Play proper roll animation (from parachute)
-                    lib.requestAnimDict('skydive@parachute@')
-                    TaskPlayAnim(ped, 'skydive@parachute@', 'chute_land_stand', 8.0, -8.0, 1000, 0, 0, false, false, false)
+                    -- Use combat roll animation (more reliable on landing)
+                    -- Flag 2 = override all other animations
+                    lib.requestAnimDict('anim@mp_player_intupperdive')
+                    TaskPlayAnim(ped, 'anim@mp_player_intupperdive', 'exit', 8.0, -8.0, 1200, 2, 0, false, false, false)
                     didDoubleJump = false
                 end
                 

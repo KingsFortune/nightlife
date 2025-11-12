@@ -17,10 +17,13 @@ body {
     height: 100vh;
     pointer-events: none;
     z-index: 9999;
+    opacity: 1;
+    transition: opacity 0.3s ease-in-out;
 }
 
 #kiroshi-overlay.hidden {
-    display: none;
+    opacity: 0;
+    pointer-events: none;
 }
 
 /* Scan lines effect */
@@ -131,7 +134,7 @@ body {
 .entity-marker {
     position: absolute;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 10px;
     animation: fadeIn 0.3s ease-in;
 }
@@ -141,7 +144,81 @@ body {
     to { opacity: 1; transform: scale(1); }
 }
 
-/* Outline box */
+/* Outline box around target */
+.outline-box {
+    position: absolute;
+    width: 120px;
+    height: 160px;
+    border: 2px solid;
+    box-shadow: 0 0 20px;
+    animation: borderPulse 2s ease-in-out infinite;
+}
+
+.outline-box.player {
+    border-color: rgba(255, 215, 0, 0.9);
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), inset 0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.outline-box.npc {
+    border-color: rgba(100, 150, 255, 0.9);
+    box-shadow: 0 0 20px rgba(100, 150, 255, 0.6), inset 0 0 20px rgba(100, 150, 255, 0.2);
+}
+
+@keyframes borderPulse {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50% { opacity: 1; transform: scale(1.02); }
+}
+
+/* Outline box corners */
+.outline-box::before,
+.outline-box::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 3px solid;
+}
+
+.outline-box::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.outline-box::after {
+    bottom: -2px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
+}
+
+.outline-box.player::before,
+.outline-box.player::after {
+    border-color: #FFD700;
+}
+
+.outline-box.npc::before,
+.outline-box.npc::after {
+    border-color: #6496FF;
+}
+
+/* Outline box - top right and bottom left corners */
+.outline-box {
+    &::before {
+        content: '';
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border: 3px solid;
+        top: -2px;
+        left: -2px;
+        border-right: none;
+        border-bottom: none;
+    }
+}
+
+/* Rotating diamond marker */
 .entity-outline {
     position: relative;
     width: 8px;
