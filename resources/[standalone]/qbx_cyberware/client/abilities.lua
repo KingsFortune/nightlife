@@ -136,9 +136,12 @@ CreateThread(function()
             local ped = cache.ped
             local implant = config.Implants.reinforced_tendons
             
-            -- Check if ped is in air (jumping or falling)
-            local isInAir = IsPedInAir(ped) or IsPedFalling(ped)
-            local isOnGround = IsPedOnFoot(ped) and not isInAir
+            -- Check if ped is in air (not on ground and falling)
+            local pedCoords = GetEntityCoords(ped)
+            local groundZ = GetGroundZFor_3dCoord(pedCoords.x, pedCoords.y, pedCoords.z, false)
+            local heightAboveGround = pedCoords.z - groundZ
+            local isInAir = heightAboveGround > 1.0 or IsPedFalling(ped)
+            local isOnGround = not isInAir and IsPedOnFoot(ped)
             
             -- Reset jump count when landing
             if isOnGround and wasInAir then
@@ -150,29 +153,25 @@ CreateThread(function()
             if IsControlJustPressed(0, 22) and isOnGround then -- SPACE key
                 jumpCount = 1
                 lastJumpTime = GetGameTimer()
-                
-                -- Enhanced first jump
-                SetPedToRagdoll(ped, 100, 100, 0, false, false, false)
-                Wait(100)
-                local velocity = GetEntityVelocity(ped)
-                SetEntityVelocity(ped, velocity.x, velocity.y, implant.effects.jump_multiplier * 3.0)
                 wasInAir = true
+                
+                -- Enhanced first jump - apply upward velocity after a tiny delay
+                SetTimeout(50, function()
+                    local velocity = GetEntityVelocity(ped)
+                    SetEntityVelocity(ped, velocity.x, velocity.y, implant.effects.jump_multiplier * 2.5)
+                end)
             end
             
             -- Double jump in mid-air
-            if IsControlJustPressed(0, 22) and isInAir and jumpCount == 1 and (GetGameTimer() - lastJumpTime) > 200 then
+            if IsControlJustPressed(0, 22) and isInAir and jumpCount == 1 and (GetGameTimer() - lastJumpTime) > 300 then
                 jumpCount = 2
                 
                 -- Apply double jump boost
                 local velocity = GetEntityVelocity(ped)
-                SetEntityVelocity(ped, velocity.x, velocity.y, implant.effects.jump_multiplier * 4.0)
+                SetEntityVelocity(ped, velocity.x, velocity.y, implant.effects.jump_multiplier * 3.5)
                 
                 -- Visual feedback
                 exports.qbx_core:Notify('⬆️ DOUBLE JUMP', 'inform', 1000)
-                
-                -- Small particle effect (optional - creates dust cloud)
-                local coords = GetEntityCoords(ped)
-                CreatePickupRotatingProportion(GetHashKey("PICKUP_MONEY_VARIABLE"), coords.x, coords.y, coords.z - 1.0, 0, 0, 0, 0, 0, 0, false)
                 
                 lastJumpTime = GetGameTimer()
             end
