@@ -37,6 +37,8 @@ RegisterNetEvent('qbx_cyberware:client:resetCooldowns', function()
 end)
 
 -- KIROSHI OPTICS: Scan nearby player or ped
+local activeScans = {} -- Track scanned entities with markers
+
 local function KiroshiScan()
     if not HasImplant('kiroshi_optics') then return end
     
@@ -59,6 +61,9 @@ local function KiroshiScan()
         local playerCount = 0
         local npcCount = 0
         
+        -- Clear old scans
+        activeScans = {}
+        
         -- Scan all players in range
         print('^3[KIROSHI] Getting active players...^0')
         local players = GetActivePlayers()
@@ -68,30 +73,27 @@ local function KiroshiScan()
             if playerCount >= 5 then break end
             
             if player ~= PlayerId() then
-                print('^3[KIROSHI] Processing player '..i..'...^0')
-                
                 local targetPed = GetPlayerPed(player)
-                print('^3[KIROSHI] Got player ped: '..tostring(targetPed)..'^0')
                 
                 if DoesEntityExist(targetPed) then
-                    print('^3[KIROSHI] Entity exists, getting coords...^0')
                     local targetCoords = GetEntityCoords(targetPed)
-                    print('^3[KIROSHI] Got target coords^0')
-                    
                     local distance = #(myCoords - targetCoords)
-                    print('^3[KIROSHI] Distance: '..distance..'m^0')
                     
                     if distance <= scanRange then
-                        print('^3[KIROSHI] In range, getting health...^0')
                         local targetHealth = GetEntityHealth(targetPed)
-                        print('^3[KIROSHI] Health: '..targetHealth..'^0')
-                        
                         local targetMaxHealth = GetEntityMaxHealth(targetPed)
-                        print('^3[KIROSHI] Max health: '..targetMaxHealth..'^0')
-                        
                         local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
                         
                         playerCount = playerCount + 1
+                        
+                        -- Add to active scans for marker rendering
+                        activeScans[targetPed] = {
+                            endTime = GetGameTimer() + 5000,
+                            isPlayer = true,
+                            health = healthPercent,
+                            distance = distance
+                        }
+                        
                         table.insert(scannedInfo, string.format('👤 Player | HP:%d%% | %.1fm', healthPercent, distance))
                         print('^2[KIROSHI] Successfully scanned player at '..distance..'m^0')
                     end
@@ -112,10 +114,6 @@ local function KiroshiScan()
                 break 
             end
             
-            if i % 50 == 0 then
-                print('^3[KIROSHI] Processed '..i..' peds so far...^0')
-            end
-            
             if ped ~= cache.ped then
                 if DoesEntityExist(ped) and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
                     local pedCoords = GetEntityCoords(ped)
@@ -127,6 +125,15 @@ local function KiroshiScan()
                         local healthPercent = math.floor((pedHealth / pedMaxHealth) * 100)
                         
                         npcCount = npcCount + 1
+                        
+                        -- Add to active scans for marker rendering
+                        activeScans[ped] = {
+                            endTime = GetGameTimer() + 5000,
+                            isPlayer = false,
+                            health = healthPercent,
+                            distance = distance
+                        }
+                        
                         table.insert(scannedInfo, string.format('🚶 NPC | HP:%d%% | %.1fm', healthPercent, distance))
                     end
                 end
@@ -161,6 +168,73 @@ local function KiroshiScan()
         exports.qbx_core:Notify('Scan failed: '..tostring(err), 'error')
     end
 end
+
+-- Thread to render markers above scanned entities
+CreateThread(function()
+    while true do
+        Wait(0)
+        
+        local currentTime = GetGameTimer()
+        local toRemove = {}
+        
+        for entity, data in pairs(activeScans) do
+            if currentTime >= data.endTime or not DoesEntityExist(entity) then
+                table.insert(toRemove, entity)
+            else
+                -- Draw marker above entity
+                local coords = GetEntityCoords(entity)
+                local headPos = GetPedBoneCoords(entity, 0x796E, 0.0, 0.0, 0.0) -- Head bone
+                
+                if headPos.x == 0.0 and headPos.y == 0.0 then
+                    -- Fallback if bone coords fail
+                    headPos = vector3(coords.x, coords.y, coords.z + 1.0)
+                else
+                    headPos = vector3(headPos.x, headPos.y, headPos.z + 0.3)
+                end
+                
+                -- Different colors for players vs NPCs
+                local r, g, b, a
+                if data.isPlayer then
+                    r, g, b, a = 255, 215, 0, 200 -- Gold for players
+                else
+                    r, g, b, a = 100, 150, 255, 200 -- Blue for NPCs
+                end
+                
+                -- Draw marker (type 28 = floating upside-down cone/marker)
+                DrawMarker(28, headPos.x, headPos.y, headPos.z, 
+                    0.0, 0.0, 0.0, -- direction
+                    0.0, 180.0, 0.0, -- rotation
+                    0.5, 0.5, 0.5, -- scale
+                    r, g, b, a, -- color
+                    false, false, 2, false, nil, nil, false)
+                
+                -- Draw 3D text with health info
+                local onScreen, _x, _y = GetScreenCoordFromWorldCoord(headPos.x, headPos.y, headPos.z + 0.3)
+                if onScreen then
+                    SetTextScale(0.35, 0.35)
+                    SetTextFont(4)
+                    SetTextProportional(true)
+                    SetTextColour(r, g, b, 255)
+                    SetTextOutline()
+                    SetTextEntry("STRING")
+                    SetTextCentre(true)
+                    AddTextComponentString(string.format("HP: %d%%\n%.1fm", data.health, data.distance))
+                    DrawText(_x, _y)
+                end
+            end
+        end
+        
+        -- Clean up expired scans
+        for _, entity in ipairs(toRemove) do
+            activeScans[entity] = nil
+        end
+        
+        -- If no active scans, wait longer
+        if next(activeScans) == nil then
+            Wait(500)
+        end
+    end
+end)
 
 -- ADRENALINE BOOSTER: Activate boost
 local function AdrenalineBoost()
