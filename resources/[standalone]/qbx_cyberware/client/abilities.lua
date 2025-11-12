@@ -165,24 +165,25 @@ CreateThread(function()
             if rollPending and not isFalling then
                 print('^1[Cyberware]^7 ========== LANDING DETECTED - EXECUTING ROLL! ==========')
                 
+                -- Clear flags IMMEDIATELY to prevent re-triggering
+                didDoubleJump = false
+                rollPending = false
+                
                 local dict = 'move_strafe@roll'
                 local anim = 'combatroll_fwd_p1_00'
                 
                 -- INSTANT interrupt and force roll
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
-                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 1, 0, false, false, false)
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, 1000, 0, 0, false, false, false)
                 
                 print('^2[Cyberware]^7 Roll animation playing!')
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Clean up
+                -- Re-enable ragdoll after animation duration
                 Wait(1000)
                 SetPedCanRagdoll(ped, true)
-                ClearPedTasks(ped)
                 
-                didDoubleJump = false
-                rollPending = false
                 print('^2[Cyberware]^7 Roll complete')
             end
         else
