@@ -12,7 +12,7 @@ Config.DefaultCooldown = 600 -- 10 minutes
 
 -- Keybinds (avoiding common keys)
 Config.Keybinds = {
-    kiroshi_scan = 'U', -- Kiroshi Optics scan
+    kiroshi_scan = 'CAPITAL', -- Kiroshi Optics scan (Capslock - toggle)
     adrenaline_boost = 'Y', -- Adrenaline Booster activate
 }
 
@@ -83,7 +83,7 @@ Config.Implants = {
         keybind = 'kiroshi_scan',
         cooldown = 5, -- 5 second cooldown between scans
         effects = {
-            scan_range = 10.0, -- meters
+            scan_range = 50.0, -- meters (extended from 10.0)
             show_health = true,
             show_job = true,
             show_name = true,

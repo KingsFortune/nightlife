@@ -1,91 +1,123 @@
-// Random name generator for NPCs
-const firstNames = ['John', 'Jane', 'Michael', 'Sarah', 'Robert', 'Lisa', 'David', 'Emily', 'James', 'Emma', 'William', 'Olivia', 'Richard', 'Sophia', 'Joseph', 'Ava', 'Thomas', 'Isabella', 'Charles', 'Mia', 'Daniel', 'Charlotte', 'Matthew', 'Amelia', 'Anthony', 'Harper', 'Mark', 'Evelyn', 'Donald', 'Abigail', 'Steven', 'Elizabeth'];
-const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis', 'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Thompson', 'White', 'Harris', 'Clark', 'Lewis', 'Robinson', 'Walker', 'Young', 'Allen', 'King', 'Wright'];
-const occupations = ['Mechanic', 'Taxi Driver', 'Security Guard', 'Store Clerk', 'Bartender', 'Chef', 'Delivery Driver', 'Construction Worker', 'Office Worker', 'Accountant', 'Lawyer', 'Doctor', 'Nurse', 'Teacher', 'Engineer', 'Programmer', 'Artist', 'Musician', 'Journalist', 'Photographer', 'Fitness Trainer', 'Real Estate Agent', 'Sales Rep', 'Waiter', 'Janitor', 'Unemployed'];
-const gangs = ['None', 'None', 'None', 'None', 'None', 'Ballas', 'Vagos', 'Families', 'Marabunta', 'Triads', 'Lost MC', 'Street Thugs'];
+// Kiroshi Optics NUI - Toggle Mode with Hover Targeting
+let kiroshiActive = false;
+let currentTarget = null;
 
-function generateNPCData(entityId) {
-    return {
-        name: `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`,
-        occupation: occupations[Math.floor(Math.random() * occupations.length)],
-        gang: gangs[Math.floor(Math.random() * gangs.length)],
-        threat: Math.random() > 0.7 ? 'HIGH' : (Math.random() > 0.4 ? 'MEDIUM' : 'LOW')
-    };
-}
+// Get DOM elements
+const overlay = document.getElementById('kiroshi-overlay');
+const targetContainer = document.getElementById('target-container');
+const targetOutline = targetContainer.querySelector('.target-outline');
+const detailBox = targetContainer.querySelector('.detail-box');
+const distanceIndicator = targetContainer.querySelector('.distance-indicator');
 
-let entityDataCache = {};
-let overlayActive = false;
-let entities = [];
-
+// Message handler
 window.addEventListener('message', (event) => {
     const data = event.data;
-    if (data.action === 'show') {
-        overlayActive = true;
-        document.getElementById('kiroshi-overlay').classList.add('active');
-        console.log('[KIROSHI NUI] Overlay activated');
-    } else if (data.action === 'hide') {
-        overlayActive = false;
-        document.getElementById('kiroshi-overlay').classList.remove('active');
-        document.getElementById('entity-markers').innerHTML = '';
-        // DON'T clear entityDataCache - keep persistent data between scans
-        console.log('[KIROSHI NUI] Overlay deactivated (data persists)');
-    } else if (data.action === 'clearCache') {
-        // Only clear cache when explicitly requested
-        entityDataCache = {};
-        console.log('[KIROSHI NUI] Cache cleared');
-    } else if (data.action === 'updateEntities') {
-        entities = data.entities || [];
-        updateMarkers();
-    } else if (data.action === 'playSound') {
-        // Play sound effect
-        const audio = new Audio(`../sounds/${data.sound}.ogg`);
-        audio.volume = data.volume || 0.5;
-        audio.play().catch(err => console.error('[SOUND] Failed to play:', err));
+    
+    switch(data.action) {
+        case 'toggleActive':
+            toggleKiroshi(data.active);
+            break;
+        case 'updateTarget':
+            updateTarget(data.target);
+            break;
+        case 'clearTarget':
+            clearTarget();
+            break;
+        case 'clearCache':
+            console.log('[KIROSHI NUI] Cache cleared');
+            break;
+        case 'playSound':
+            playSound(data.sound, data.volume);
+            break;
     }
 });
 
-function updateMarkers() {
-    const container = document.getElementById('entity-markers');
-    container.innerHTML = '';
+// Toggle Kiroshi overlay
+function toggleKiroshi(active) {
+    kiroshiActive = active;
     
-    entities.forEach(entity => {
-        if (!entityDataCache[entity.id]) {
-            entityDataCache[entity.id] = entity.isPlayer ? {
-                name: entity.name || 'Unknown',
-                job: entity.job || 'Civilian',
-                gang: entity.gang || 'None',
-                threat: 'LOW'
-            } : generateNPCData(entity.id);
-        }
-        
-        const entityData = entityDataCache[entity.id];
-        const entityType = entity.isPlayer ? 'player' : 'npc';
-        
-        // Create wrapper - positioned at exact pixel coordinates
-        const wrapper = document.createElement('div');
-        wrapper.className = 'entity-wrapper';
-        wrapper.style.position = 'absolute';
-        wrapper.style.left = entity.x + 'px';
-        wrapper.style.top = entity.y + 'px';
-        wrapper.style.transform = 'translate(-50%, -100%)'; // Center horizontally, position above
-        
-        // Create info panel only (no CSS outline, using game rendering)
-        const info = document.createElement('div');
-        info.className = `entity-info ${entityType}`;
-        info.innerHTML = `
-            <div class="distance-indicator">${entity.distance.toFixed(1)}m</div>
-            <div class="info-header ${entityType}">${entity.isPlayer ? '◆ PLAYER ◆' : '◆ CIVILIAN ◆'}</div>
-            <div class="info-row"><span class="info-label">ID:</span><span class="info-value">${entityData.name}</span></div>
-            <div class="info-row"><span class="info-label">${entity.isPlayer ? 'JOB' : 'OCC'}:</span><span class="info-value">${entity.isPlayer ? entityData.job : entityData.occupation}</span></div>
-            ${entityData.gang !== 'None' ? `<div class="info-row"><span class="info-label">GANG:</span><span class="info-value" style="color:#ff4444">${entityData.gang}</span></div>` : ''}
-            ${!entity.isPlayer ? `<div class="info-row"><span class="info-label">THREAT:</span><span class="info-value" style="color:${entityData.threat === 'HIGH' ? '#ff4444' : (entityData.threat === 'MEDIUM' ? '#ffaa00' : '#44ff44')}">${entityData.threat}</span></div>` : ''}
-            <div class="info-row"><span class="info-label">HP:</span><span class="info-value">${entity.health}%</span></div>
-            <div class="health-bar"><div class="health-bar-fill" style="width:${entity.health}%;background-position:${100-entity.health}% 0"></div></div>
-        `;
-        
-        wrapper.appendChild(info);
-        container.appendChild(wrapper);
-    });
+    if (active) {
+        overlay.classList.add('active');
+        console.log('[KIROSHI NUI] Activated');
+    } else {
+        overlay.classList.remove('active');
+        clearTarget();
+        console.log('[KIROSHI NUI] Deactivated');
+    }
 }
 
-RegisterNUICallback('requestUpdate', (data, cb) => cb('ok'));
+// Update target info and position
+function updateTarget(target) {
+    if (!kiroshiActive) return;
+    
+    currentTarget = target;
+    const isPlayer = target.isPlayer;
+    const typeClass = isPlayer ? 'player' : 'npc';
+    
+    // Show target container
+    targetContainer.classList.add('visible');
+    
+    // Update outline box position (center on target)
+    targetOutline.style.left = target.x + 'px';
+    targetOutline.style.top = target.y + 'px';
+    targetOutline.className = `target-outline ${typeClass}`;
+    
+    // Update distance indicator
+    distanceIndicator.textContent = `${target.distance}m`;
+    distanceIndicator.className = `distance-indicator ${typeClass}`;
+    distanceIndicator.style.left = target.x + 'px';
+    distanceIndicator.style.top = (target.y - 100) + 'px'; // Above outline
+    distanceIndicator.style.transform = 'translateX(-50%)';
+    
+    // Update detail box position (to the right of outline)
+    const detailOffsetX = 70; // Distance from outline center
+    detailBox.style.left = (target.x + detailOffsetX) + 'px';
+    detailBox.style.top = target.y + 'px';
+    detailBox.className = `detail-box ${typeClass}`;
+    
+    // Update detail box content
+    const header = detailBox.querySelector('.detail-header');
+    header.textContent = isPlayer ? '◆ PLAYER SCAN ◆' : '◆ NPC SCAN ◆';
+    header.className = `detail-header ${typeClass}`;
+    
+    // Update name
+    detailBox.querySelector('.name-value').textContent = target.name || 'Unknown';
+    
+    // Update job/occupation
+    const jobRow = detailBox.querySelector('.job-row');
+    if (isPlayer) {
+        jobRow.style.display = 'flex';
+        detailBox.querySelector('.job-value').textContent = target.job || 'Civilian';
+    } else {
+        jobRow.style.display = 'none';
+    }
+    
+    // Update gang
+    const gangRow = detailBox.querySelector('.gang-row');
+    if (isPlayer && target.gang && target.gang !== 'None') {
+        gangRow.style.display = 'flex';
+        detailBox.querySelector('.gang-value').textContent = target.gang;
+        detailBox.querySelector('.gang-value').className = 'detail-value player-accent';
+    } else {
+        gangRow.style.display = 'none';
+    }
+    
+    // Update health bar
+    const healthFill = detailBox.querySelector('.health-bar-fill');
+    healthFill.style.width = target.health + '%';
+    healthFill.style.backgroundPosition = (100 - target.health) + '% 0';
+}
+
+// Clear target display
+function clearTarget() {
+    currentTarget = null;
+    targetContainer.classList.remove('visible');
+}
+
+// Play sound effect
+function playSound(sound, volume = 0.5) {
+    const audio = new Audio(`../sounds/${sound}.ogg`);
+    audio.volume = volume;
+    audio.play().catch(err => console.error('[KIROSHI SOUND] Failed to play:', err));
+}
+
