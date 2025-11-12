@@ -262,67 +262,34 @@ CreateThread(function()
             -- Air control ONLY when actually in air AND moving significantly (not running on ground)
             if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 then
                 local vel = GetEntityVelocity(ped)
+                local heading = GetEntityHeading(ped)
+                local radians = math.rad(heading)
                 
-                -- Strong air control to actually change trajectory
-                local moveSpeed = 1.2
-                local hasInput = false
+                -- Increased air control for smoother feel
+                local moveSpeed = 0.25
+                local newVelX = vel.x
+                local newVelY = vel.y
                 
-                -- Get camera heading for TRUE camera-relative controls
-                local camHeading = GetGameplayCamRelativeHeading()
-                local pedHeading = GetEntityHeading(ped)
-                local absoluteCamHeading = camHeading + pedHeading
-                local inputHeading = nil
-                
-                -- Calculate input direction relative to CAMERA (not ped)
-                if IsControlPressed(0, 32) and IsControlPressed(0, 34) then -- W+A (forward-left)
-                    inputHeading = absoluteCamHeading + 45.0
-                    hasInput = true
-                elseif IsControlPressed(0, 32) and IsControlPressed(0, 35) then -- W+D (forward-right)
-                    inputHeading = absoluteCamHeading - 45.0
-                    hasInput = true
-                elseif IsControlPressed(0, 33) and IsControlPressed(0, 34) then -- S+A (back-left)
-                    inputHeading = absoluteCamHeading + 135.0
-                    hasInput = true
-                elseif IsControlPressed(0, 33) and IsControlPressed(0, 35) then -- S+D (back-right)
-                    inputHeading = absoluteCamHeading - 135.0
-                    hasInput = true
-                elseif IsControlPressed(0, 32) then -- W (camera forward)
-                    inputHeading = absoluteCamHeading
-                    hasInput = true
-                elseif IsControlPressed(0, 33) then -- S (camera backward)
-                    inputHeading = absoluteCamHeading + 180.0
-                    hasInput = true
-                elseif IsControlPressed(0, 34) then -- A (camera left)
-                    inputHeading = absoluteCamHeading + 90.0
-                    hasInput = true
-                elseif IsControlPressed(0, 35) then -- D (camera right)
-                    inputHeading = absoluteCamHeading - 90.0
-                    hasInput = true
+                -- Fixed direction calculations
+                if IsControlPressed(0, 32) then -- W - Forward
+                    newVelX = newVelX + (-math.sin(radians) * moveSpeed)
+                    newVelY = newVelY + (math.cos(radians) * moveSpeed)
+                end
+                if IsControlPressed(0, 33) then -- S - Backward
+                    newVelX = newVelX - (-math.sin(radians) * moveSpeed)
+                    newVelY = newVelY - (math.cos(radians) * moveSpeed)
+                end
+                if IsControlPressed(0, 34) then -- A - Left
+                    newVelX = newVelX - (math.cos(radians) * moveSpeed)
+                    newVelY = newVelY - (math.sin(radians) * moveSpeed)
+                end
+                if IsControlPressed(0, 35) then -- D - Right
+                    newVelX = newVelX + (math.cos(radians) * moveSpeed)
+                    newVelY = newVelY + (math.sin(radians) * moveSpeed)
                 end
                 
-                if hasInput and inputHeading then
-                    -- Calculate STRONG directional force to change trajectory
-                    local rad = math.rad(inputHeading)
-                    local forceX = -math.sin(rad) * moveSpeed
-                    local forceY = math.cos(rad) * moveSpeed
-                    
-                    -- Add force to velocity (actually changes where you're going)
-                    local newVelX = vel.x + forceX
-                    local newVelY = vel.y + forceY
-                    
+                if newVelX ~= vel.x or newVelY ~= vel.y then
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
-                    
-                    -- Smoothly rotate character to face INPUT direction
-                    local currentHeading = GetEntityHeading(ped)
-                    local diff = inputHeading - currentHeading
-                    
-                    -- Normalize angle difference to -180 to 180
-                    while diff > 180.0 do diff = diff - 360.0 end
-                    while diff < -180.0 do diff = diff + 360.0 end
-                    
-                    -- Smooth rotation
-                    local newHeading = currentHeading + (diff * 0.2)
-                    SetEntityHeading(ped, newHeading)
                 end
             end
             
