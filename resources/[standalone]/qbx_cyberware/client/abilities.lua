@@ -169,6 +169,9 @@ CreateThread(function()
                 didDoubleJump = false
                 rollPending = false
                 
+                -- CAPTURE current velocity to preserve momentum
+                local capturedVel = GetEntityVelocity(ped)
+                
                 local dict = 'move_fall@beastjump'
                 local anim = 'high_land_run'
                 
@@ -176,17 +179,27 @@ CreateThread(function()
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
                 
-                -- Play high land run animation with flag 48 (allows movement)
-                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 48, 0, false, false, false)
+                -- Play high land run animation
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
                 print('^2[Cyberware]^7 High land run animation playing!')
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Re-enable ragdoll quickly
+                -- Keep applying velocity throughout animation to maintain momentum
                 CreateThread(function()
-                    Wait(400)
-                    SetPedCanRagdoll(PlayerPedId(), true)
-                    print('^2[Cyberware]^7 Animation complete!')
+                    local rollPed = PlayerPedId()
+                    local startTime = GetGameTimer()
+                    
+                    -- Apply velocity every frame for 400ms
+                    while GetGameTimer() - startTime < 400 do
+                        SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
+                        Wait(0)
+                    end
+                    
+                    -- Final velocity push and re-enable ragdoll
+                    SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
+                    SetPedCanRagdoll(rollPed, true)
+                    print('^2[Cyberware]^7 Animation complete - momentum maintained!')
                 end)
             end
         else
