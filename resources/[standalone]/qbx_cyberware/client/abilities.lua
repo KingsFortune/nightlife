@@ -160,11 +160,31 @@ CreateThread(function()
             if isOnGround and not lastGroundState then
                 print('^2[Cyberware]^7 Landed - Resetting jump state')
                 
-                -- Reset double jump flag
+                -- Combat roll on double jump landing
                 if didDoubleJump then
                     didDoubleJump = false
-                    -- Just a notification, no animation (they all break)
-                    exports.qbx_core:Notify('🎯 Perfect Landing', 'success', 1000)
+                    
+                    -- Play combat roll animation
+                    CreateThread(function()
+                        local playerPed = PlayerPedId()
+                        
+                        -- Request animation dictionary
+                        lib.requestAnimDict('move_jump')
+                        
+                        -- Clear any existing tasks
+                        ClearPedTasks(playerPed)
+                        
+                        -- Play the roll forward animation
+                        TaskPlayAnim(playerPed, 'move_jump', 'roll_fwd', 8.0, -8.0, 800, 0, 0, false, false, false)
+                        
+                        exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 1000)
+                        
+                        -- Wait for animation to finish
+                        Wait(800)
+                        
+                        -- Clear the animation
+                        ClearPedTasks(playerPed)
+                    end)
                 end
                 
                 jumpCount = 0
