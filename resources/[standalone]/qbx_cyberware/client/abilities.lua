@@ -169,9 +169,6 @@ CreateThread(function()
                 didDoubleJump = false
                 rollPending = false
                 
-                -- CAPTURE current velocity to preserve momentum
-                local capturedVel = GetEntityVelocity(ped)
-                
                 local dict = 'move_fall@beastjump'
                 local anim = 'high_land_run'
                 
@@ -185,24 +182,11 @@ CreateThread(function()
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Keep applying velocity throughout animation to maintain momentum
+                -- Re-enable ragdoll after animation
                 CreateThread(function()
-                    local rollPed = PlayerPedId()
-                    local startTime = GetGameTimer()
-                    
-                    -- Apply velocity for a reasonable roll duration (700ms)
-                    while GetGameTimer() - startTime < 700 do
-                        SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
-                        Wait(0)
-                    end
-                    
-                    -- CUT the animation and restore control
-                    ClearPedTasks(rollPed)
-                    
-                    -- Final velocity push and re-enable ragdoll
-                    SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
-                    SetPedCanRagdoll(rollPed, true)
-                    print('^2[Cyberware]^7 Roll complete - momentum maintained!')
+                    Wait(500)
+                    SetPedCanRagdoll(PlayerPedId(), true)
+                    print('^2[Cyberware]^7 Animation complete!')
                 end)
             end
         else
