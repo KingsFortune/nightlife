@@ -151,8 +151,8 @@ CreateThread(function()
                 print('^3[Cyberware]^7 ROLL PENDING - Preloading animation...')
                 
                 -- Preload animation NOW while still falling
-                local dict = 'move_strafe@roll'
-                local anim = 'combatroll_fwd_p1_00'
+                local dict = 'move_fall@beastjump'
+                local anim = 'land_roll'
                 
                 RequestAnimDict(dict)
                 while not HasAnimDictLoaded(dict) do
@@ -169,43 +169,24 @@ CreateThread(function()
                 didDoubleJump = false
                 rollPending = false
                 
-                -- CAPTURE VELOCITY before we lose it
-                local velocity = GetEntityVelocity(ped)
-                print('^3[Cyberware]^7 Captured velocity - X: '..velocity.x..' Y: '..velocity.y)
-                
-                local dict = 'move_strafe@roll'
-                local animStart = 'combatroll_fwd_p1_00'  -- Roll down
-                local animEnd = 'combatroll_fwd_p2_00'    -- Roll recovery
+                local dict = 'move_fall@beastjump'
+                local anim = 'land_roll'
                 
                 -- INSTANT interrupt and force roll
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
                 
-                -- Play first part (roll down)
-                TaskPlayAnim(ped, dict, animStart, 8.0, -8.0, -1, 0, 0, false, false, false)
-                print('^2[Cyberware]^7 Roll start animation playing!')
+                -- Play landing roll animation
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
+                print('^2[Cyberware]^7 Landing roll animation playing!')
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Play both animations then restore momentum
+                -- Re-enable ragdoll after brief moment
                 CreateThread(function()
-                    local rollPed = PlayerPedId()
-                    
-                    -- Let first animation play
-                    Wait(300)
-                    TaskPlayAnim(rollPed, dict, animEnd, 8.0, -8.0, -1, 0, 0, false, false, false)
-                    print('^2[Cyberware]^7 Roll recovery animation playing!')
-                    
-                    -- Let recovery play briefly, then restore control
-                    Wait(200)
-                    
-                    -- Re-enable ragdoll
-                    SetPedCanRagdoll(rollPed, true)
-                    
-                    -- IMMEDIATELY RESTORE VELOCITY to maintain momentum
-                    SetEntityVelocity(rollPed, velocity.x, velocity.y, 0.0)
-                    
-                    print('^2[Cyberware]^7 Roll complete - momentum restored!')
+                    Wait(500)
+                    SetPedCanRagdoll(PlayerPedId(), true)
+                    print('^2[Cyberware]^7 Roll complete!')
                 end)
             end
         else
