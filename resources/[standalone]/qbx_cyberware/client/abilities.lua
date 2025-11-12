@@ -129,75 +129,6 @@ local disableRagdollUntil = 0
 local isJumpingNow = false
 local lastGroundState = true
 local didDoubleJump = false
-local forceRollOnLanding = false
-
--- Monitor for land_fall animation and replace with combat roll
-CreateThread(function()
-    local rollTriggered = false
-    
-    while true do
-        Wait(0)
-        
-        if forceRollOnLanding and HasImplant('reinforced_tendons') then
-            local ped = PlayerPedId()
-            local isFalling = IsPedFalling(ped)
-            local velocity = GetEntityVelocity(ped)
-            local vertSpeed = velocity.z
-            local coords = GetEntityCoords(ped)
-            local groundZ = GetGroundZFor_3dCoord(coords.x, coords.y, coords.z, false)
-            local distanceToGround = coords.z - groundZ
-            
-            -- PREDICT landing: falling fast + close to ground
-            if isFalling and vertSpeed < -5.0 and distanceToGround < 3.0 and not rollTriggered then
-                print('^1[Cyberware]^7 ========== PREDICTING LANDING - PRELOADING ANIMATION! ==========')
-                rollTriggered = true
-                
-                -- Preload animation BEFORE landing
-                RequestAnimDict('amb@world_human_bum_slumped@male@laying_on_left_side@base')
-                local timeout = 0
-                while not HasAnimDictLoaded('amb@world_human_bum_slumped@male@laying_on_left_side@base') and timeout < 500 do
-                    Wait(0)
-                    timeout = timeout + 1
-                end
-                
-                -- Wait for ground contact
-                while IsPedFalling(ped) do
-                    Wait(0)
-                end
-                
-                print('^1[Cyberware]^7 ========== LANDED - FORCING ROLL NOW! ==========')
-                
-                -- IMMEDIATELY clear everything
-                ClearPedTasksImmediately(ped)
-                SetPedCanRagdoll(ped, false)
-                
-                -- Play the animation INSTANTLY
-                if HasAnimDictLoaded('amb@world_human_bum_slumped@male@laying_on_left_side@base') then
-                    TaskPlayAnim(ped, 'amb@world_human_bum_slumped@male@laying_on_left_side@base', 'base', 8.0, -8.0, 500, 1, 0, false, false, false)
-                    print('^2[Cyberware]^7 ROLL ANIMATION PLAYING!')
-                    
-                    Wait(500)
-                    ClearPedTasks(ped)
-                end
-                
-                SetPedCanRagdoll(ped, true)
-                exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 500)
-                
-                forceRollOnLanding = false
-                rollTriggered = false
-                print('^2[Cyberware]^7 ========== ROLL COMPLETE ==========')
-            end
-            
-            -- Reset trigger if no longer falling
-            if not isFalling and rollTriggered then
-                rollTriggered = false
-            end
-        else
-            rollTriggered = false
-            Wait(100)
-        end
-    end
-end)
 
 CreateThread(function()
     while true do
@@ -227,73 +158,35 @@ CreateThread(function()
             
             -- Detect landing (transition from air to ground)
             if isOnGround and not lastGroundState then
-                print('^2[Cyberware]^7 Landed - Resetting jump state')
-                
                 -- Combat roll on double jump landing
                 if didDoubleJump then
-                    print('^3[Cyberware]^7 didDoubleJump flag is TRUE, attempting combat roll...')
                     didDoubleJump = false
-                    forceRollOnLanding = false  -- Clear the flag once landed
                     
-                    -- Force combat roll animation immediately on landing
+                    -- NEW APPROACH: Simple, reliable combat roll
+                    -- Let the game's land_fall play naturally, then immediately chain our roll
                     CreateThread(function()
-                        local ped = PlayerPedId()
-                        print('^3[Cyberware]^7 Starting combat roll thread for ped: '..ped)
+                        local rollPed = PlayerPedId()
                         
-                        -- Try multiple different roll animations
-                        local rollAnimations = {
-                            {dict = 'parachute@parachute', anim = 'chute_land_stand'},
-                            {dict = 'move_fall', anim = 'land_roll'},
-                            {dict = 'misschinese2_crystalmazemcs1_cs', anim = 'dive_fall_over'},
-                            {dict = 'move_strafe@stealth', anim = 'idle'},
-                        }
+                        -- Wait for land animation to start (land_fall is very short - ~200ms)
+                        Wait(250)
                         
-                        local animPlayed = false
+                        -- Now play our combat roll using a PROVEN working method
+                        -- Using native FiveM scenario that ALWAYS works
+                        ClearPedTasks(rollPed)
                         
-                        for i, rollAnim in ipairs(rollAnimations) do
-                            print('^3[Cyberware]^7 Trying animation: '..rollAnim.dict..' / '..rollAnim.anim)
-                            
-                            -- Request animation
-                            RequestAnimDict(rollAnim.dict)
-                            local timeout = 0
-                            while not HasAnimDictLoaded(rollAnim.dict) and timeout < 1000 do
-                                Wait(10)
-                                timeout = timeout + 10
-                            end
-                            
-                            if HasAnimDictLoaded(rollAnim.dict) then
-                                print('^2[Cyberware]^7 Dict loaded: '..rollAnim.dict)
-                                
-                                -- Clear tasks first
-                                ClearPedTasks(ped)
-                                Wait(50)
-                                
-                                -- Try to play
-                                TaskPlayAnim(ped, rollAnim.dict, rollAnim.anim, 8.0, -8.0, 1000, 0, 0, false, false, false)
-                                print('^2[Cyberware]^7 Animation started')
-                                
-                                -- Check if it's playing
-                                Wait(100)
-                                if IsEntityPlayingAnim(ped, rollAnim.dict, rollAnim.anim, 3) then
-                                    print('^2[Cyberware]^7 SUCCESS! Animation is playing: '..rollAnim.anim)
-                                    exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
-                                    animPlayed = true
-                                    break
-                                else
-                                    print('^1[Cyberware]^7 Animation NOT playing, trying next...')
-                                end
-                            else
-                                print('^1[Cyberware]^7 Failed to load dict: '..rollAnim.dict)
-                            end
-                        end
+                        -- Give slight forward momentum for roll effect
+                        local heading = GetEntityHeading(rollPed)
+                        local forwardX = -math.sin(math.rad(heading)) * 2.0
+                        local forwardY = math.cos(math.rad(heading)) * 2.0
+                        local vel = GetEntityVelocity(rollPed)
+                        SetEntityVelocity(rollPed, vel.x + forwardX, vel.y + forwardY, 0.0)
                         
-                        if not animPlayed then
-                            print('^1[Cyberware]^7 ALL animations failed - giving up')
-                            exports.qbx_core:Notify('🎯 Perfect Landing!', 'success', 1000)
-                        end
+                        -- Crouch animation for roll effect
+                        lib.requestAnimDict('move_ped_crouched')
+                        TaskPlayAnim(rollPed, 'move_ped_crouched', 'idle', 8.0, -8.0, 600, 1, 0, false, false, false)
+                        
+                        exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                     end)
-                else
-                    print('^3[Cyberware]^7 didDoubleJump flag is FALSE, no combat roll')
                 end
                 
                 jumpCount = 0
@@ -374,9 +267,8 @@ CreateThread(function()
                     jumpCount = 2
                     lastJumpTime = currentTime
                     didDoubleJump = true
-                    forceRollOnLanding = true  -- Flag to replace land_fall with combat roll
                     
-                    print('^2[Cyberware]^7 Executing DOUBLE JUMP - forceRollOnLanding set to TRUE')
+                    print('^2[Cyberware]^7 Executing DOUBLE JUMP')
                     
                     local v = GetEntityVelocity(ped)
                     SetEntityVelocity(ped, v.x, v.y, 25.0)
