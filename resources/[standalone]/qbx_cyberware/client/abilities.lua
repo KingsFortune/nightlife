@@ -290,11 +290,12 @@ CreateThread(function()
                     isJumpingNow = true
                     didDoubleJump = false
                     
+                    -- Increase camera smoothing for fluid jump feel
+                    SetCamFollowPedThisUpdate(ped)
+                    SetFollowPedCamViewMode(0)
+                    
                     -- Force the jump with smoother velocity
                     TaskJump(ped, true)
-                    
-                    -- Subtle FOV zoom for dynamic feel
-                    SetTimecycleModifierStrength(0.0)
                     
                     -- Smoother boost - less delay and more gradual
                     SetTimeout(80, function()
@@ -316,6 +317,9 @@ CreateThread(function()
                     jumpCount = 2
                     lastJumpTime = currentTime
                     didDoubleJump = true
+                    
+                    -- Smoother camera transition on double jump
+                    SetCamFollowPedThisUpdate(ped)
                     
                     local v = GetEntityVelocity(ped)
                     -- Smoother double jump - preserve and boost existing velocity
