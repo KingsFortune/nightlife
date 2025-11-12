@@ -251,7 +251,8 @@ CreateThread(function()
                 local heading = GetEntityHeading(ped)
                 local radians = math.rad(heading)
                 
-                local moveSpeed = 0.15 -- Reduced from 0.25 for less slippery feel
+                -- Increased air control for smoother feel
+                local moveSpeed = 0.25
                 local newVelX = vel.x
                 local newVelY = vel.y
                 
@@ -276,6 +277,10 @@ CreateThread(function()
                 if newVelX ~= vel.x or newVelY ~= vel.y then
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                 end
+                
+                -- Smooth camera follow during aerial movement
+                SetGameplayCamRelativeHeading(0)
+                SetGameplayCamRelativePitch(0, 1.0)
             end
             
             -- Jump boost
@@ -292,12 +297,15 @@ CreateThread(function()
                     -- Force the jump with smoother velocity
                     TaskJump(ped, true)
                     
+                    -- Camera shake for impact feedback
+                    ShakeGameplayCam('SMALL_EXPLOSION_SHAKE', 0.05)
+                    
                     -- Smoother boost - less delay and more gradual
                     SetTimeout(80, function()
                         local p = PlayerPedId()
                         local v = GetEntityVelocity(p)
                         -- Slightly higher first jump for better feel
-                        SetEntityVelocity(p, v.x, v.y, 12.0)
+                        SetEntityVelocity(p, v.x * 1.1, v.y * 1.1, 12.0)
                     end)
                     
                     -- Clear isJumpingNow after shorter time
@@ -313,9 +321,12 @@ CreateThread(function()
                     lastJumpTime = currentTime
                     didDoubleJump = true
                     
+                    -- Camera shake for double jump feedback
+                    ShakeGameplayCam('SMALL_EXPLOSION_SHAKE', 0.08)
+                    
                     local v = GetEntityVelocity(ped)
-                    -- Smoother double jump - preserve some existing velocity
-                    SetEntityVelocity(ped, v.x * 1.2, v.y * 1.2, 20.0)
+                    -- Smoother double jump - preserve and boost existing velocity
+                    SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, 20.0)
                     
                     -- Disable ragdoll for 3 seconds (shorter for better control)
                     disableRagdollUntil = GetGameTimer() + 3000
