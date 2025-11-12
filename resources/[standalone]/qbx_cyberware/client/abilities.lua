@@ -263,9 +263,8 @@ CreateThread(function()
             if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 then
                 local vel = GetEntityVelocity(ped)
                 
-                -- Air control with air friction to reduce slipperiness
-                local moveSpeed = 0.4
-                local airFriction = 0.98 -- Slight slowdown in air
+                -- Strong air control to actually change trajectory
+                local moveSpeed = 1.2
                 local hasInput = false
                 
                 -- Get camera heading for TRUE camera-relative controls
@@ -302,14 +301,14 @@ CreateThread(function()
                 end
                 
                 if hasInput and inputHeading then
-                    -- Add velocity in the CAMERA direction
+                    -- Calculate STRONG directional force to change trajectory
                     local rad = math.rad(inputHeading)
-                    local addVelX = -math.sin(rad) * moveSpeed
-                    local addVelY = math.cos(rad) * moveSpeed
+                    local forceX = -math.sin(rad) * moveSpeed
+                    local forceY = math.cos(rad) * moveSpeed
                     
-                    -- Apply air friction to existing velocity, then add input
-                    local newVelX = (vel.x * airFriction) + addVelX
-                    local newVelY = (vel.y * airFriction) + addVelY
+                    -- Add force to velocity (actually changes where you're going)
+                    local newVelX = vel.x + forceX
+                    local newVelY = vel.y + forceY
                     
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
@@ -324,9 +323,6 @@ CreateThread(function()
                     -- Smooth rotation
                     local newHeading = currentHeading + (diff * 0.2)
                     SetEntityHeading(ped, newHeading)
-                else
-                    -- No input: apply air friction only
-                    SetEntityVelocity(ped, vel.x * airFriction, vel.y * airFriction, vel.z)
                 end
             end
             
