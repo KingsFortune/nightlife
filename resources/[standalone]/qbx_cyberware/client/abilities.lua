@@ -187,21 +187,25 @@ CreateThread(function()
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Quick roll with momentum restoration
+                -- Play both animations then restore momentum
                 CreateThread(function()
                     local rollPed = PlayerPedId()
                     
-                    -- Let roll down play briefly
-                    Wait(250)
+                    -- Let first animation play
+                    Wait(300)
+                    TaskPlayAnim(rollPed, dict, animEnd, 8.0, -8.0, -1, 0, 0, false, false, false)
+                    print('^2[Cyberware]^7 Roll recovery animation playing!')
                     
-                    -- CUT the animation short and restore control immediately
-                    ClearPedTasksImmediately(rollPed)
+                    -- Let recovery play briefly, then restore control
+                    Wait(200)
+                    
+                    -- Re-enable ragdoll
                     SetPedCanRagdoll(rollPed, true)
                     
-                    -- RESTORE VELOCITY immediately
+                    -- IMMEDIATELY RESTORE VELOCITY to maintain momentum
                     SetEntityVelocity(rollPed, velocity.x, velocity.y, 0.0)
                     
-                    print('^2[Cyberware]^7 Roll complete - control restored with momentum')
+                    print('^2[Cyberware]^7 Roll complete - momentum restored!')
                 end)
             end
         else
