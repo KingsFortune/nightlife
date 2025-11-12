@@ -334,15 +334,11 @@ CreateThread(function()
                             end
                         end)
                         
-                    elseif jumpCount == 1 and (currentTime - lastJumpTime) > 250 and not isOnGround then
+                    elseif jumpCount == 1 and (currentTime - lastJumpTime) > 250 and not isOnGround and not IsPedRagdoll(ped) then
                         -- Double jump - reduced delay from 400ms to 250ms for snappier feel
                         jumpCount = 2
                         lastJumpTime = currentTime
                         didDoubleJump = true
-                        
-                        -- Disable ragdoll BEFORE applying velocity (prevent ragdoll on landing)
-                        disableRagdollUntil = GetGameTimer() + 5000
-                        SetPedCanRagdoll(ped, false)
                         
                         -- Play jump animation for visual feedback
                         TaskJump(ped, true)
@@ -360,6 +356,9 @@ CreateThread(function()
                         
                         -- Preserve and boost horizontal velocity
                         SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, verticalBoost)
+                        
+                        -- Disable ragdoll for 5 seconds after double jump
+                        disableRagdollUntil = GetGameTimer() + 5000
                         
                         exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
                     end
