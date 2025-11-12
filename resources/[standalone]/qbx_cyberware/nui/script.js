@@ -36,6 +36,11 @@ window.addEventListener('message', (event) => {
     } else if (data.action === 'updateEntities') {
         entities = data.entities || [];
         updateMarkers();
+    } else if (data.action === 'playSound') {
+        // Play sound effect
+        const audio = new Audio(`../sounds/${data.sound}.ogg`);
+        audio.volume = data.volume || 0.5;
+        audio.play().catch(err => console.error('[SOUND] Failed to play:', err));
     }
 });
 

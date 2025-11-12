@@ -347,6 +347,13 @@ CreateThread(function()
                         lastJumpTime = currentTime
                         didDoubleJump = true
                         
+                        -- Play double jump sound effect
+                        SendNUIMessage({
+                            action = 'playSound',
+                            sound = 'doublejump',
+                            volume = 0.3
+                        })
+                        
                         -- Play jump animation for visual feedback
                         TaskJump(ped, true)
                         

@@ -40,6 +40,7 @@ files {
     'nui/index.html',
     'nui/style.css',
     'nui/script.js',
+    'sounds/doublejump.ogg',
 }
 
 ui_page 'nui/index.html'
