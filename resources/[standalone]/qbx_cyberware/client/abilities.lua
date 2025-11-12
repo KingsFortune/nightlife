@@ -176,17 +176,19 @@ CreateThread(function()
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
                 
-                -- Play landing roll animation
-                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
+                -- Play landing roll animation with shorter duration
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, 400, 0, 0, false, false, false)
                 print('^2[Cyberware]^7 Landing roll animation playing!')
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Re-enable ragdoll after brief moment
+                -- Restore control FAST
                 CreateThread(function()
-                    Wait(500)
-                    SetPedCanRagdoll(PlayerPedId(), true)
-                    print('^2[Cyberware]^7 Roll complete!')
+                    Wait(350)
+                    local rollPed = PlayerPedId()
+                    ClearPedTasks(rollPed)
+                    SetPedCanRagdoll(rollPed, true)
+                    print('^2[Cyberware]^7 Roll complete - control restored!')
                 end)
             end
         else
