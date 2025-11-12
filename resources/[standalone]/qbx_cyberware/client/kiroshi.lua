@@ -2,20 +2,34 @@
 local config = require 'config.shared'
 local kiroshiActive = false
 local scannedEntities = {}
+local cooldowns = {} -- Local cooldown tracking
 
--- Check if ability is on cooldown (imported from abilities.lua scope)
+-- Check if ability is on cooldown
 local function IsOnCooldown(implantId)
-    -- This will be handled by the main abilities.lua cooldown system
-    return exports.qbx_cyberware:IsOnCooldown(implantId)
+    if not cooldowns[implantId] then return false, 0 end
+    
+    local remaining = cooldowns[implantId] - GetGameTimer()
+    if remaining <= 0 then
+        cooldowns[implantId] = nil
+        return false, 0
+    end
+    
+    return true, math.ceil(remaining / 1000)
 end
 
+-- Set ability cooldown
 local function SetCooldown(implantId, duration)
-    TriggerEvent('qbx_cyberware:client:setCooldown', implantId, duration)
+    cooldowns[implantId] = GetGameTimer() + (duration * 1000)
 end
 
 local function HasImplant(implantId)
     return exports.qbx_cyberware:HasImplant(implantId)
 end
+
+-- Handle cooldown resets from server
+RegisterNetEvent('qbx_cyberware:client:resetCooldowns', function()
+    cooldowns = {}
+end)
 
 -- Activate Kiroshi Scan
 function ActivateKiroshiScan()
