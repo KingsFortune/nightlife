@@ -340,6 +340,10 @@ CreateThread(function()
                         lastJumpTime = currentTime
                         didDoubleJump = true
                         
+                        -- Disable ragdoll BEFORE applying velocity (prevent ragdoll on landing)
+                        disableRagdollUntil = GetGameTimer() + 5000
+                        SetPedCanRagdoll(ped, false)
+                        
                         -- Play jump animation for visual feedback
                         TaskJump(ped, true)
                         
@@ -356,9 +360,6 @@ CreateThread(function()
                         
                         -- Preserve and boost horizontal velocity
                         SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, verticalBoost)
-                        
-                        -- Disable ragdoll for longer when falling from height
-                        disableRagdollUntil = GetGameTimer() + 5000
                         
                         exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
                     end
