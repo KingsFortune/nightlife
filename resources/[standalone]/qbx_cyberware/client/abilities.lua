@@ -36,7 +36,7 @@ RegisterNetEvent('qbx_cyberware:client:resetCooldowns', function()
     exports.qbx_core:Notify('🔄 All cooldowns have been reset', 'success')
 end)
 
--- KIROSHI OPTICS: Scan nearby player
+-- KIROSHI OPTICS: Scan nearby player or ped
 local function KiroshiScan()
     if not HasImplant('kiroshi_optics') then return end
     
@@ -48,39 +48,88 @@ local function KiroshiScan()
         return
     end
     
-    -- Get closest player
-    local player, distance = lib.getClosestPlayer(GetEntityCoords(cache.ped), implant.effects.scan_range)
+    local myCoords = GetEntityCoords(cache.ped)
     
-    if not player then
-        exports.qbx_core:Notify('No target in range', 'error')
-        return
-    end
+    -- First try to find a player
+    local player, playerDistance = lib.getClosestPlayer(myCoords, implant.effects.scan_range)
     
-    local targetId = GetPlayerServerId(player)
-    local targetPed = GetPlayerPed(player)
-    local targetHealth = GetEntityHealth(targetPed)
-    local targetMaxHealth = GetEntityMaxHealth(targetPed)
-    local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
-    
-    -- Request target data from server
-    lib.callback('qbx_cyberware:server:scanTarget', false, function(targetData)
-        if targetData then
+    if player then
+        -- Scan player
+        local targetId = GetPlayerServerId(player)
+        local targetPed = GetPlayerPed(player)
+        local targetHealth = GetEntityHealth(targetPed)
+        local targetMaxHealth = GetEntityMaxHealth(targetPed)
+        local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
+        
+        -- Request target data from server
+        lib.callback('qbx_cyberware:server:scanTarget', false, function(targetData)
+            if targetData then
+                local scanText = string.format(
+                    '🎯 **Player Scanned**\n' ..
+                    '**Name:** %s %s\n' ..
+                    '**Health:** %d%%\n' ..
+                    '**Job:** %s',
+                    targetData.firstname or 'Unknown',
+                    targetData.lastname or 'Unknown',
+                    healthPercent,
+                    targetData.job or 'Unemployed'
+                )
+                
+                exports.qbx_core:Notify(scanText, 'inform', 5000)
+            else
+                exports.qbx_core:Notify('Scan failed', 'error')
+            end
+        end, targetId)
+    else
+        -- No player found, scan closest ped instead
+        local closestPed = nil
+        local closestDist = implant.effects.scan_range
+        
+        local peds = GetGamePool('CPed')
+        for _, ped in ipairs(peds) do
+            if ped ~= cache.ped and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
+                local pedCoords = GetEntityCoords(ped)
+                local dist = #(myCoords - pedCoords)
+                if dist < closestDist then
+                    closestPed = ped
+                    closestDist = dist
+                end
+            end
+        end
+        
+        if closestPed then
+            local pedHealth = GetEntityHealth(closestPed)
+            local pedMaxHealth = GetEntityMaxHealth(closestPed)
+            local healthPercent = math.floor((pedHealth / pedMaxHealth) * 100)
+            local pedModel = GetEntityModel(closestPed)
+            local pedName = GetDisplayNameFromVehicleModel(pedModel)
+            
+            -- Get ped type
+            local pedType = 'Unknown'
+            if IsPedInAnyPoliceVehicle(closestPed) or IsPedCop(closestPed) then
+                pedType = 'Law Enforcement'
+            elseif IsPedInAnyVehicle(closestPed, false) then
+                pedType = 'Civilian (Vehicle)'
+            else
+                pedType = 'Civilian'
+            end
+            
             local scanText = string.format(
-                '🎯 **Target Scanned**\n' ..
-                '**Name:** %s %s\n' ..
+                '🎯 **NPC Scanned**\n' ..
+                '**Type:** %s\n' ..
                 '**Health:** %d%%\n' ..
-                '**Job:** %s',
-                targetData.firstname or 'Unknown',
-                targetData.lastname or 'Unknown',
+                '**Distance:** %.1fm',
+                pedType,
                 healthPercent,
-                targetData.job or 'Unemployed'
+                closestDist
             )
             
             exports.qbx_core:Notify(scanText, 'inform', 5000)
         else
-            exports.qbx_core:Notify('Scan failed', 'error')
+            exports.qbx_core:Notify('No target in range', 'error')
+            return
         end
-    end, targetId)
+    end
     
     SetCooldown('kiroshi_optics', implant.cooldown)
 end
@@ -160,6 +209,7 @@ local jumpCount = 0
 local lastJumpTime = 0
 local disableRagdollUntil = 0
 local isJumpingNow = false
+local lastGroundState = true
 
 CreateThread(function()
     while true do
@@ -176,8 +226,23 @@ CreateThread(function()
                 SetPedCanRagdoll(ped, true)
             end
             
-            -- Air control when in air (both jumping and falling)
-            if IsPedFalling(ped) or IsPedJumping(ped) or isJumpingNow then
+            -- Ground check (multiple methods for reliability)
+            local isFalling = IsPedFalling(ped)
+            local isJumping = IsPedJumping(ped)
+            local isRagdoll = IsPedRagdoll(ped)
+            local isOnFoot = IsPedOnFoot(ped)
+            local isOnGround = isOnFoot and not isFalling and not isJumping and not isRagdoll and not isJumpingNow
+            
+            -- Detect landing (transition from air to ground)
+            if isOnGround and not lastGroundState then
+                print('^2[Cyberware]^7 Landed - Resetting jump state')
+                jumpCount = 0
+                isJumpingNow = false
+            end
+            lastGroundState = isOnGround
+            
+            -- Air control ONLY when actually in air (not running on ground)
+            if (isFalling or isJumping or isJumpingNow) and not isOnGround then
                 local vel = GetEntityVelocity(ped)
                 local heading = GetEntityHeading(ped)
                 local radians = math.rad(heading)
@@ -208,17 +273,12 @@ CreateThread(function()
                 end
             end
             
-            -- Ground check
-            local isOnGround = IsPedOnFoot(ped) and not IsPedFalling(ped) and not IsPedJumping(ped) and not isJumpingNow
-            
-            if isOnGround then
-                jumpCount = 0
-                isJumpingNow = false
-            end
-            
             -- Jump boost
             if IsControlJustPressed(0, 22) then -- SPACE
                 local currentTime = GetGameTimer()
+                
+                print(string.format('^3[Cyberware]^7 SPACE pressed - OnGround: %s, JumpCount: %d, IsJumpingNow: %s', 
+                    tostring(isOnGround), jumpCount, tostring(isJumpingNow)))
                 
                 if isOnGround and jumpCount == 0 then
                     -- First jump only when on ground and haven't jumped yet
@@ -226,16 +286,20 @@ CreateThread(function()
                     lastJumpTime = currentTime
                     isJumpingNow = true
                     
+                    print('^2[Cyberware]^7 Executing FIRST JUMP')
+                    
                     -- Force the jump
                     TaskJump(ped, true)
                     
                     -- Boost after slight delay
                     SetTimeout(120, function()
                         local p = PlayerPedId()
-                        if IsPedJumping(p) or IsPedFalling(p) or isJumpingNow then
+                        if isJumpingNow then
                             local v = GetEntityVelocity(p)
-                            -- Much higher first jump
                             SetEntityVelocity(p, v.x, v.y, 15.0)
+                            print('^2[Cyberware]^7 First jump boost applied (15.0)')
+                        else
+                            print('^1[Cyberware]^7 First jump boost FAILED - not jumping anymore')
                         end
                     end)
                     
@@ -244,14 +308,19 @@ CreateThread(function()
                     jumpCount = 2
                     lastJumpTime = currentTime
                     
+                    print('^2[Cyberware]^7 Executing DOUBLE JUMP')
+                    
                     local v = GetEntityVelocity(ped)
-                    -- Even higher double jump
                     SetEntityVelocity(ped, v.x, v.y, 20.0)
                     
                     -- Disable ragdoll for 4 seconds after double jump
                     disableRagdollUntil = GetGameTimer() + 4000
                     
                     exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
+                    print('^2[Cyberware]^7 Double jump boost applied (20.0)')
+                else
+                    print(string.format('^1[Cyberware]^7 Jump conditions NOT met - JumpCount: %d, TimeSince: %dms, OnGround: %s',
+                        jumpCount, currentTime - lastJumpTime, tostring(isOnGround)))
                 end
             end
         else
