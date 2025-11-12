@@ -250,6 +250,13 @@ CreateThread(function()
             -- Consider on ground if: on foot, not falling, not jumping, not ragdolling, and minimal vertical movement
             local isOnGround = isOnFoot and not isFalling and not isJumping and not isRagdoll and verticalSpeed < 0.5
             
+            -- Reset jump count if ragdolling (prevents super jump after ragdoll recovery)
+            if isRagdoll then
+                jumpCount = 0
+                isJumpingNow = false
+                didDoubleJump = false
+            end
+            
             -- Detect landing (transition from air to ground) - but DON'T trigger roll here anymore
             if isOnGround and not lastGroundState then
                 -- Reset if we somehow landed without the monitoring thread catching it
