@@ -132,6 +132,8 @@ local didDoubleJump = false
 
 -- Monitoring thread to intercept landing BEFORE land_fall can play
 CreateThread(function()
+    local rollPending = false
+    
     while true do
         Wait(0)
         
@@ -143,53 +145,48 @@ CreateThread(function()
             local distanceToGround = coords.z - groundZ
             local velocity = GetEntityVelocity(ped)
             
-            -- Debug: Print status every 100ms while we're waiting
-            if isFalling then
-                print(string.format('^3[Cyberware]^7 Falling - Distance: %.2fm, VelZ: %.2f, IsFalling: %s', 
-                    distanceToGround, velocity.z, tostring(isFalling)))
-            end
-            
-            -- When we're very close to ground (within 2 meters now - increased range) and falling
-            if isFalling and distanceToGround < 2.0 and velocity.z < -1.0 then
-                print('^1[Cyberware]^7 ========== INTERCEPTING LANDING ==========')
-                print('^3[Cyberware]^7 Distance: '..distanceToGround..'m, Velocity Z: '..velocity.z)
+            -- Start preparing once we're falling downward after double jump
+            if not rollPending and isFalling and velocity.z < -1.0 then
+                rollPending = true
+                print('^3[Cyberware]^7 ROLL PENDING - Preloading animation...')
                 
-                -- Preload animation RIGHT NOW
+                -- Preload animation NOW while still falling
                 local dict = 'move_strafe@roll'
                 local anim = 'combatroll_fwd_p2_00'
                 
-                if not HasAnimDictLoaded(dict) then
-                    print('^3[Cyberware]^7 Loading animation dict...')
-                    RequestAnimDict(dict)
-                    while not HasAnimDictLoaded(dict) do
-                        Wait(0)
-                    end
-                    print('^2[Cyberware]^7 Dict loaded!')
-                end
-                
-                -- Wait for the EXACT moment we touch ground
-                print('^3[Cyberware]^7 Waiting for ground contact...')
-                while IsPedFalling(ped) do
+                RequestAnimDict(dict)
+                while not HasAnimDictLoaded(dict) do
                     Wait(0)
                 end
+                print('^2[Cyberware]^7 Animation ready!')
+            end
+            
+            -- Execute roll the INSTANT we're no longer falling (landing moment)
+            if rollPending and not isFalling then
+                print('^1[Cyberware]^7 ========== LANDING DETECTED - EXECUTING ROLL! ==========')
                 
-                print('^1[Cyberware]^7 ========== GROUND CONTACT - FORCING ROLL NOW! ==========')
+                local dict = 'move_strafe@roll'
+                local anim = 'combatroll_fwd_p2_00'
                 
-                -- INSTANT interrupt and force roll (no delay at all)
+                -- INSTANT interrupt and force roll
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
                 TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 1, 0, false, false, false)
                 
-                print('^2[Cyberware]^7 Roll animation started!')
+                print('^2[Cyberware]^7 Roll animation playing!')
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Clean up after animation
+                -- Clean up
                 Wait(1000)
                 SetPedCanRagdoll(ped, true)
+                ClearPedTasks(ped)
+                
                 didDoubleJump = false
-                print('^2[Cyberware]^7 Roll complete, flag cleared')
+                rollPending = false
+                print('^2[Cyberware]^7 Roll complete')
             end
         else
+            rollPending = false
             Wait(100)
         end
     end
