@@ -50,6 +50,8 @@ local function KiroshiScan()
         return
     end
     
+    print('^3[KIROSHI] Starting scan...^0')
+    
     local myCoords = GetEntityCoords(cache.ped)
     local scanRange = implant.effects.scan_range
     local scannedInfo = {}
@@ -58,10 +60,14 @@ local function KiroshiScan()
     
     -- Scan all players in range (limit to prevent spam)
     local players = GetActivePlayers()
+    print('^3[KIROSHI] Total players online: '..#players..'^0')
+    
     for _, player in ipairs(players) do
-        if player ~= PlayerId() and playerCount < 5 then -- Max 5 players
-            local targetPed = GetPlayerPed(player)
-            if DoesEntityExist(targetPed) then
+        if player ~= PlayerId() and playerCount < 3 then -- Reduced to 3 for testing
+            local success, err = pcall(function()
+                local targetPed = GetPlayerPed(player)
+                if not DoesEntityExist(targetPed) then return end
+                
                 local targetCoords = GetEntityCoords(targetPed)
                 local distance = #(myCoords - targetCoords)
                 
@@ -71,43 +77,65 @@ local function KiroshiScan()
                     local targetMaxHealth = GetEntityMaxHealth(targetPed)
                     local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
                     
-                    -- Highlight player safely
-                    if NetworkGetEntityIsNetworked(targetPed) then
-                        SetEntityDrawOutline(targetPed, true)
-                        SetEntityDrawOutlineColor(255, 215, 0, 255) -- Gold
-                        activeScans[targetPed] = GetGameTimer() + 5000
-                    end
+                    print('^2[KIROSHI] Attempting to highlight player '..targetPed..'^0')
+                    
+                    -- Try highlight with error handling
+                    SetEntityDrawOutline(targetPed, true)
+                    SetEntityDrawOutlineColor(255, 215, 0, 255) -- Gold
+                    activeScans[targetPed] = GetGameTimer() + 5000
+                    
+                    print('^2[KIROSHI] Successfully highlighted player '..targetPed..'^0')
                     
                     table.insert(scannedInfo, string.format('👤 Player | HP:%d%% | %.1fm', healthPercent, distance))
                 end
+            end)
+            
+            if not success then
+                print('^1[KIROSHI] Error scanning player: '..tostring(err)..'^0')
             end
         end
     end
     
+    print('^3[KIROSHI] Players scanned: '..playerCount..', now scanning NPCs...^0')
+    
     -- Scan NPCs in range (limit to prevent crash)
     local peds = GetGamePool('CPed')
+    print('^3[KIROSHI] Total peds in pool: '..#peds..'^0')
+    
     for _, ped in ipairs(peds) do
-        if npcCount >= 10 then break end -- Max 10 NPCs
+        if npcCount >= 5 then break end -- Reduced to 5 for testing
         
-        if ped ~= cache.ped and DoesEntityExist(ped) and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
-            local pedCoords = GetEntityCoords(ped)
-            local distance = #(myCoords - pedCoords)
-            
-            if distance <= scanRange then
-                npcCount = npcCount + 1
-                local pedHealth = GetEntityHealth(ped)
-                local pedMaxHealth = GetEntityMaxHealth(ped)
-                local healthPercent = math.floor((pedHealth / pedMaxHealth) * 100)
+        local success, err = pcall(function()
+            if ped ~= cache.ped and DoesEntityExist(ped) and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
+                local pedCoords = GetEntityCoords(ped)
+                local distance = #(myCoords - pedCoords)
                 
-                -- Highlight NPC safely (no network check needed for local peds)
-                SetEntityDrawOutline(ped, true)
-                SetEntityDrawOutlineColor(100, 150, 255, 255) -- Blue
-                activeScans[ped] = GetGameTimer() + 5000
-                
-                table.insert(scannedInfo, string.format('🚶 NPC | HP:%d%% | %.1fm', healthPercent, distance))
+                if distance <= scanRange then
+                    npcCount = npcCount + 1
+                    local pedHealth = GetEntityHealth(ped)
+                    local pedMaxHealth = GetEntityMaxHealth(ped)
+                    local healthPercent = math.floor((pedHealth / pedMaxHealth) * 100)
+                    
+                    print('^2[KIROSHI] Attempting to highlight NPC '..ped..'^0')
+                    
+                    -- Try highlight with error handling
+                    SetEntityDrawOutline(ped, true)
+                    SetEntityDrawOutlineColor(100, 150, 255, 255) -- Blue
+                    activeScans[ped] = GetGameTimer() + 5000
+                    
+                    print('^2[KIROSHI] Successfully highlighted NPC '..ped..'^0')
+                    
+                    table.insert(scannedInfo, string.format('🚶 NPC | HP:%d%% | %.1fm', healthPercent, distance))
+                end
             end
+        end)
+        
+        if not success then
+            print('^1[KIROSHI] Error scanning NPC: '..tostring(err)..'^0')
         end
     end
+    
+    print('^3[KIROSHI] Scan complete. Players: '..playerCount..', NPCs: '..npcCount..'^0')
     
     local totalScanned = playerCount + npcCount
     
@@ -130,16 +158,24 @@ end
 -- Thread to manage scan highlights
 CreateThread(function()
     while true do
-        Wait(500) -- Slower update rate
+        Wait(1000) -- Check every second
         
         local currentTime = GetGameTimer()
         local toRemove = {}
         
         for entity, endTime in pairs(activeScans) do
             if currentTime >= endTime then
-                if DoesEntityExist(entity) then
-                    SetEntityDrawOutline(entity, false)
+                local success, err = pcall(function()
+                    if DoesEntityExist(entity) then
+                        SetEntityDrawOutline(entity, false)
+                        print('^3[KIROSHI] Removed highlight from entity '..entity..'^0')
+                    end
+                end)
+                
+                if not success then
+                    print('^1[KIROSHI] Error removing highlight: '..tostring(err)..'^0')
                 end
+                
                 table.insert(toRemove, entity)
             end
         end
