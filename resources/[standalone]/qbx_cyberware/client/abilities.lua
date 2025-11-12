@@ -190,11 +190,14 @@ CreateThread(function()
                     local rollPed = PlayerPedId()
                     local startTime = GetGameTimer()
                     
-                    -- Apply velocity every frame for 400ms
-                    while GetGameTimer() - startTime < 400 do
+                    -- Apply velocity every frame but CUT the animation short (450ms instead of full 483ms)
+                    while GetGameTimer() - startTime < 450 do
                         SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
                         Wait(0)
                     end
+                    
+                    -- FORCE clear the animation before the end
+                    ClearPedTasks(rollPed)
                     
                     -- Final velocity push and re-enable ragdoll
                     SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
