@@ -57,7 +57,7 @@ Config.Implants = {
         active = false,
         price = 100000,
         effects = {
-            jump_multiplier = 1.5, -- 50% higher jumps
+            jump_multiplier = 2.5, -- 2.5x higher jumps (was 1.5)
             can_double_jump = true,
         },
         visual = {

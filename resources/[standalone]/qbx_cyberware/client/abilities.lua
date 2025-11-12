@@ -123,35 +123,58 @@ local function AdrenalineBoost()
     SetCooldown('adrenaline_booster', implant.cooldown)
 end
 
--- REINFORCED TENDONS: Double Jump
+-- REINFORCED TENDONS: Enhanced Jump & Double Jump
 local jumpCount = 0
-local canDoubleJump = false
+local wasInAir = false
+local lastJumpTime = 0
 
 CreateThread(function()
     while true do
         Wait(0)
         
         if HasImplant('reinforced_tendons') then
+            local ped = cache.ped
             local implant = config.Implants.reinforced_tendons
             
-            -- Check if player is on ground
-            if IsPedOnFoot(cache.ped) and not IsPedRagdoll(cache.ped) then
-                if IsPedJumping(cache.ped) then
-                    if jumpCount == 0 then
-                        jumpCount = 1
-                        canDoubleJump = true
-                    end
-                elseif not IsPedFalling(cache.ped) then
-                    jumpCount = 0
-                    canDoubleJump = false
-                end
+            -- Check if ped is in air (jumping or falling)
+            local isInAir = IsPedInAir(ped) or IsPedFalling(ped)
+            local isOnGround = IsPedOnFoot(ped) and not isInAir
+            
+            -- Reset jump count when landing
+            if isOnGround and wasInAir then
+                jumpCount = 0
+                wasInAir = false
+            end
+            
+            -- First jump detection
+            if IsControlJustPressed(0, 22) and isOnGround then -- SPACE key
+                jumpCount = 1
+                lastJumpTime = GetGameTimer()
                 
-                -- Double jump
-                if canDoubleJump and IsControlJustPressed(0, 22) and jumpCount == 1 then -- SPACE key
-                    TaskJump(cache.ped, true)
-                    jumpCount = 2
-                    canDoubleJump = false
-                end
+                -- Enhanced first jump
+                SetPedToRagdoll(ped, 100, 100, 0, false, false, false)
+                Wait(100)
+                local velocity = GetEntityVelocity(ped)
+                SetEntityVelocity(ped, velocity.x, velocity.y, implant.effects.jump_multiplier * 3.0)
+                wasInAir = true
+            end
+            
+            -- Double jump in mid-air
+            if IsControlJustPressed(0, 22) and isInAir and jumpCount == 1 and (GetGameTimer() - lastJumpTime) > 200 then
+                jumpCount = 2
+                
+                -- Apply double jump boost
+                local velocity = GetEntityVelocity(ped)
+                SetEntityVelocity(ped, velocity.x, velocity.y, implant.effects.jump_multiplier * 4.0)
+                
+                -- Visual feedback
+                exports.qbx_core:Notify('⬆️ DOUBLE JUMP', 'inform', 1000)
+                
+                -- Small particle effect (optional - creates dust cloud)
+                local coords = GetEntityCoords(ped)
+                CreatePickupRotatingProportion(GetHashKey("PICKUP_MONEY_VARIABLE"), coords.x, coords.y, coords.z - 1.0, 0, 0, 0, 0, 0, 0, false)
+                
+                lastJumpTime = GetGameTimer()
             end
         else
             Wait(500)
