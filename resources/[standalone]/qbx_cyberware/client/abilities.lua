@@ -168,16 +168,18 @@ CreateThread(function()
                         local rollPed = PlayerPedId()
                         
                         -- Wait for land animation to finish (land_fall is very short - ~200ms)
-                        Wait(250)
+                        Wait(200)
                         
-                        -- Give strong forward momentum for roll effect
-                        local heading = GetEntityHeading(rollPed)
-                        local forwardX = -math.sin(math.rad(heading)) * 5.0
-                        local forwardY = math.cos(math.rad(heading)) * 5.0
-                        SetEntityVelocity(rollPed, forwardX, forwardY, 0.2)
+                        -- Use the ACTUAL combat roll animation from GTA V
+                        local dict = 'move_strafe@roll_fps@combatroll_fwd_p1_-90'
+                        lib.requestAnimDict(dict)
                         
-                        -- Brief controlled ragdoll for roll physics
-                        SetPedToRagdoll(rollPed, 400, 400, 0, true, true, false)
+                        -- Play combat roll
+                        TaskPlayAnim(rollPed, dict, 'combatroll_fwd_p1_-90', 8.0, -8.0, -1, 0, 0, false, false, false)
+                        
+                        -- Let it play for duration
+                        Wait(800)
+                        ClearPedTasks(rollPed)
                         
                         exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                     end)
