@@ -277,10 +277,6 @@ CreateThread(function()
                 if newVelX ~= vel.x or newVelY ~= vel.y then
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                 end
-                
-                -- Smooth camera follow during aerial movement
-                SetGameplayCamRelativeHeading(0)
-                SetGameplayCamRelativePitch(0, 1.0)
             end
             
             -- Jump boost
@@ -297,8 +293,8 @@ CreateThread(function()
                     -- Force the jump with smoother velocity
                     TaskJump(ped, true)
                     
-                    -- Camera shake for impact feedback
-                    ShakeGameplayCam('SMALL_EXPLOSION_SHAKE', 0.05)
+                    -- Subtle FOV zoom for dynamic feel
+                    SetTimecycleModifierStrength(0.0)
                     
                     -- Smoother boost - less delay and more gradual
                     SetTimeout(80, function()
@@ -320,9 +316,6 @@ CreateThread(function()
                     jumpCount = 2
                     lastJumpTime = currentTime
                     didDoubleJump = true
-                    
-                    -- Camera shake for double jump feedback
-                    ShakeGameplayCam('SMALL_EXPLOSION_SHAKE', 0.08)
                     
                     local v = GetEntityVelocity(ped)
                     -- Smoother double jump - preserve and boost existing velocity
