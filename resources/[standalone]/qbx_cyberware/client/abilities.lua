@@ -255,27 +255,64 @@ CreateThread(function()
                 local moveSpeed = 0.25
                 local newVelX = vel.x
                 local newVelY = vel.y
+                local hasInput = false
+                local targetHeading = heading
                 
-                -- Fixed direction calculations
+                -- Fixed direction calculations with rotation
                 if IsControlPressed(0, 32) then -- W - Forward
                     newVelX = newVelX + (-math.sin(radians) * moveSpeed)
                     newVelY = newVelY + (math.cos(radians) * moveSpeed)
+                    hasInput = true
+                    targetHeading = heading
                 end
                 if IsControlPressed(0, 33) then -- S - Backward
                     newVelX = newVelX - (-math.sin(radians) * moveSpeed)
                     newVelY = newVelY - (math.cos(radians) * moveSpeed)
+                    hasInput = true
+                    targetHeading = heading + 180.0
                 end
                 if IsControlPressed(0, 34) then -- A - Left
                     newVelX = newVelX - (math.cos(radians) * moveSpeed)
                     newVelY = newVelY - (math.sin(radians) * moveSpeed)
+                    hasInput = true
+                    targetHeading = heading - 90.0
                 end
                 if IsControlPressed(0, 35) then -- D - Right
                     newVelX = newVelX + (math.cos(radians) * moveSpeed)
                     newVelY = newVelY + (math.sin(radians) * moveSpeed)
+                    hasInput = true
+                    targetHeading = heading + 90.0
                 end
                 
                 if newVelX ~= vel.x or newVelY ~= vel.y then
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
+                    
+                    -- Rotate character to face movement direction smoothly
+                    if hasInput then
+                        local camHeading = GetGameplayCamRelativeHeading()
+                        local finalHeading = camHeading
+                        
+                        -- Calculate heading based on camera and input
+                        if IsControlPressed(0, 32) and IsControlPressed(0, 34) then -- W+A
+                            finalHeading = camHeading - 45.0
+                        elseif IsControlPressed(0, 32) and IsControlPressed(0, 35) then -- W+D
+                            finalHeading = camHeading + 45.0
+                        elseif IsControlPressed(0, 33) and IsControlPressed(0, 34) then -- S+A
+                            finalHeading = camHeading - 135.0
+                        elseif IsControlPressed(0, 33) and IsControlPressed(0, 35) then -- S+D
+                            finalHeading = camHeading + 135.0
+                        elseif IsControlPressed(0, 32) then -- W
+                            finalHeading = camHeading
+                        elseif IsControlPressed(0, 33) then -- S
+                            finalHeading = camHeading + 180.0
+                        elseif IsControlPressed(0, 34) then -- A
+                            finalHeading = camHeading - 90.0
+                        elseif IsControlPressed(0, 35) then -- D
+                            finalHeading = camHeading + 90.0
+                        end
+                        
+                        SetEntityHeading(ped, finalHeading)
+                    end
                 end
             end
             
