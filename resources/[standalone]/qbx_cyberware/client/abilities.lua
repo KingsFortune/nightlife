@@ -104,14 +104,10 @@ local function KiroshiScan()
             local pedModel = GetEntityModel(closestPed)
             local pedName = GetDisplayNameFromVehicleModel(pedModel)
             
-            -- Get ped type
-            local pedType = 'Unknown'
-            if IsPedInAnyPoliceVehicle(closestPed) or IsPedCop(closestPed) then
-                pedType = 'Law Enforcement'
-            elseif IsPedInAnyVehicle(closestPed, false) then
-                pedType = 'Civilian (Vehicle)'
-            else
-                pedType = 'Civilian'
+            -- Get ped type - simplified since no NPC cops
+            local pedType = 'Civilian'
+            if IsPedInAnyVehicle(closestPed, false) then
+                pedType = 'Civilian (in Vehicle)'
             end
             
             local scanText = string.format(
@@ -231,7 +227,11 @@ CreateThread(function()
             local isJumping = IsPedJumping(ped)
             local isRagdoll = IsPedRagdoll(ped)
             local isOnFoot = IsPedOnFoot(ped)
-            local isOnGround = isOnFoot and not isFalling and not isJumping and not isRagdoll and not isJumpingNow
+            local velocity = GetEntityVelocity(ped)
+            local verticalSpeed = math.abs(velocity.z)
+            
+            -- Consider on ground if: on foot, not falling, not jumping, not ragdolling, and minimal vertical movement
+            local isOnGround = isOnFoot and not isFalling and not isJumping and not isRagdoll and verticalSpeed < 0.5
             
             -- Detect landing (transition from air to ground)
             if isOnGround and not lastGroundState then
@@ -241,8 +241,8 @@ CreateThread(function()
             end
             lastGroundState = isOnGround
             
-            -- Air control ONLY when actually in air (not running on ground)
-            if (isFalling or isJumping or isJumpingNow) and not isOnGround then
+            -- Air control ONLY when actually in air AND moving significantly (not running on ground)
+            if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 then
                 local vel = GetEntityVelocity(ped)
                 local heading = GetEntityHeading(ped)
                 local radians = math.rad(heading)
@@ -294,13 +294,17 @@ CreateThread(function()
                     -- Boost after slight delay
                     SetTimeout(120, function()
                         local p = PlayerPedId()
-                        if isJumpingNow then
-                            local v = GetEntityVelocity(p)
-                            SetEntityVelocity(p, v.x, v.y, 15.0)
-                            print('^2[Cyberware]^7 First jump boost applied (15.0)')
-                        else
-                            print('^1[Cyberware]^7 First jump boost FAILED - not jumping anymore')
-                        end
+                        local v = GetEntityVelocity(p)
+                        SetEntityVelocity(p, v.x, v.y, 15.0)
+                        print('^2[Cyberware]^7 First jump boost applied (15.0)')
+                        
+                        -- Clear isJumpingNow after 2 seconds to allow landing detection
+                        SetTimeout(2000, function()
+                            if isJumpingNow then
+                                print('^3[Cyberware]^7 Clearing isJumpingNow flag')
+                                isJumpingNow = false
+                            end
+                        end)
                     end)
                     
                 elseif jumpCount == 1 and (currentTime - lastJumpTime) > 400 and not isOnGround then
