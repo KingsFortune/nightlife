@@ -106,8 +106,26 @@ local function AdrenalineBoost()
     activeEffects.adrenaline = true
     exports.qbx_core:Notify('⚡ ADRENALINE BOOST ACTIVATED', 'success')
     
-    -- Apply speed boost
-    SetPedMoveRateOverride(cache.ped, implant.effects.speed_boost)
+    -- Apply run speed multiplier
+    local ped = cache.ped
+    StatSetInt(GetHashKey('MP0_STAMINA'), 100, true)
+    
+    -- Create thread for speed boost
+    CreateThread(function()
+        local endTime = GetGameTimer() + (implant.duration * 1000)
+        while GetGameTimer() < endTime and activeEffects.adrenaline do
+            local ped = cache.ped
+            -- Boost run speed
+            SetRunSprintMultiplierForPlayer(PlayerId(), implant.effects.speed_boost)
+            SetSwimMultiplierForPlayer(PlayerId(), implant.effects.speed_boost)
+            RestorePlayerStamina(PlayerId(), 1.0)
+            Wait(0)
+        end
+        
+        -- Reset speed
+        SetRunSprintMultiplierForPlayer(PlayerId(), 1.0)
+        SetSwimMultiplierForPlayer(PlayerId(), 1.0)
+    end)
     
     -- Visual feedback
     SetTimecycleModifier('REDMIST_blend')
@@ -120,7 +138,6 @@ local function AdrenalineBoost()
     SetTimeout(implant.duration * 1000, function()
         -- Deactivate boost
         activeEffects.adrenaline = false
-        SetPedMoveRateOverride(cache.ped, 1.0)
         ClearTimecycleModifier()
         
         exports.qbx_core:Notify('Adrenaline boost depleted', 'inform')
@@ -132,8 +149,8 @@ end
 
 -- REINFORCED TENDONS: Enhanced Jump & Double Jump
 local jumpCount = 0
-local wasInAir = false
-local lastJumpTime = 0
+local isJumping = false
+local canDoubleJump = false
 
 CreateThread(function()
     while true do
@@ -153,43 +170,47 @@ CreateThread(function()
                 SetPedConfigFlag(ped, 104, true) -- CPED_CONFIG_FLAG_NoFallDamageRagdoll
             end
             
-            -- Check if ped is in air using velocity and falling state
+            -- Check if ped is moving (prevent standing still jumps)
             local velocity = GetEntityVelocity(ped)
+            local speed = math.sqrt(velocity.x^2 + velocity.y^2)
+            local isMoving = speed > 0.5 or IsControlPressed(0, 32) or IsControlPressed(0, 33) or IsControlPressed(0, 34) or IsControlPressed(0, 35)
+            
+            -- Check if in air
             local isFalling = IsPedFalling(ped)
-            local isInAir = isFalling or (velocity.z > 0.5) or (velocity.z < -0.5)
+            local isInAir = isFalling or (velocity.z > 0.5) or (velocity.z < -0.5) or isJumping
             local isOnGround = IsPedOnFoot(ped) and not isInAir
             
-            -- Reset jump count when landing
-            if isOnGround and wasInAir then
+            -- Reset when landing
+            if isOnGround and isJumping then
+                isJumping = false
                 jumpCount = 0
-                wasInAir = false
+                canDoubleJump = false
             end
             
-            -- First jump detection
-            if IsControlJustPressed(0, 22) and isOnGround then -- SPACE key
+            -- First jump (only when moving)
+            if IsControlJustPressed(0, 22) and isOnGround and isMoving then -- SPACE key
+                isJumping = true
                 jumpCount = 1
-                lastJumpTime = GetGameTimer()
-                wasInAir = true
+                canDoubleJump = true
                 
-                -- Enhanced first jump - boost upward velocity
-                SetTimeout(100, function()
-                    local vel = GetEntityVelocity(ped)
-                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_multiplier * 3.5)
-                end)
+                -- Slight delay then boost
+                Wait(50)
+                local vel = GetEntityVelocity(ped)
+                SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_first * 2.5)
             end
             
-            -- Double jump in mid-air
-            if IsControlJustPressed(0, 22) and isInAir and jumpCount == 1 and (GetGameTimer() - lastJumpTime) > 400 then
+            -- Double jump in mid-air (only when already jumped)
+            if IsControlJustPressed(0, 22) and isInAir and canDoubleJump and jumpCount == 1 then
                 jumpCount = 2
+                canDoubleJump = false
                 
                 -- Apply double jump boost
+                Wait(50)
                 local vel = GetEntityVelocity(ped)
-                SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_multiplier * 5.0)
+                SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_double * 3.0)
                 
                 -- Visual feedback
                 exports.qbx_core:Notify('⬆️ DOUBLE JUMP', 'inform', 1000)
-                
-                lastJumpTime = GetGameTimer()
             end
         else
             -- Reset to normal if no implant
