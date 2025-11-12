@@ -150,14 +150,11 @@ CreateThread(function()
             if isOnGround and not lastGroundState then
                 print('^2[Cyberware]^7 Landed - Resetting jump state')
                 
-                -- If we did a double jump and just landed, trigger roll
+                -- Reset double jump flag
                 if didDoubleJump then
-                    print('^2[Cyberware]^7 Triggering landing roll after double jump')
-                    -- Use combat roll animation (more reliable on landing)
-                    -- Flag 2 = override all other animations
-                    lib.requestAnimDict('anim@mp_player_intupperdive')
-                    TaskPlayAnim(ped, 'anim@mp_player_intupperdive', 'exit', 8.0, -8.0, 1200, 2, 0, false, false, false)
                     didDoubleJump = false
+                    -- Just a notification, no animation (they all break)
+                    exports.qbx_core:Notify('🎯 Perfect Landing', 'success', 1000)
                 end
                 
                 jumpCount = 0

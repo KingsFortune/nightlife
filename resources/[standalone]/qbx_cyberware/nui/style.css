@@ -7,6 +7,7 @@
 body {
     font-family: 'Courier New', monospace;
     overflow: hidden;
+    background: transparent;
 }
 
 #kiroshi-overlay {
@@ -17,14 +18,341 @@ body {
     height: 100vh;
     pointer-events: none;
     z-index: 9999;
-    opacity: 1;
-    transition: opacity 0.3s ease-in-out;
+    display: none;
 }
 
-#kiroshi-overlay.hidden {
-    opacity: 0;
+#kiroshi-overlay.active {
+    display: block;
+}
+
+/* Scan lines effect */
+.scan-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 215, 0, 0.05) 0px,
+        rgba(255, 215, 0, 0.05) 1px,
+        transparent 1px,
+        transparent 3px
+    );
+    animation: scan 4s linear infinite;
     pointer-events: none;
 }
+
+@keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(12px); }
+}
+
+/* Corner UI elements */
+.corner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(255, 215, 0, 0.8);
+    z-index: 10000;
+}
+
+.top-left {
+    top: 20px;
+    left: 20px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.top-right {
+    top: 20px;
+    right: 20px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.bottom-left {
+    bottom: 20px;
+    left: 20px;
+    border-right: none;
+    border-top: none;
+}
+
+.bottom-right {
+    bottom: 20px;
+    right: 20px;
+    border-left: none;
+    border-top: none;
+}
+
+/* Status indicator */
+.status-indicator {
+    position: absolute;
+    top: 30px;
+    right: 70px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 2px solid rgba(255, 215, 0, 0.8);
+    padding: 10px 15px;
+    min-width: 180px;
+    z-index: 10000;
+}
+
+.status-text {
+    color: #FFD700;
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+}
+
+.status-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 215, 0, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.status-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    animation: pulse 1.5s ease-in-out infinite;
+    width: 100%;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.7; }
+    50% { opacity: 1; }
+}
+
+/* Entity markers container */
+#entity-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+}
+
+.entity-wrapper {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    animation: entityFadeIn 0.3s ease-out forwards;
+}
+
+@keyframes entityFadeIn {
+    from { 
+        opacity: 0; 
+        transform: translate(-50%, -50%) scale(0.5);
+    }
+    to { 
+        opacity: 1; 
+        transform: translate(-50%, -50%) scale(1);
+    }
+}
+
+/* Main outline box around entity */
+.entity-outline-box {
+    position: absolute;
+    width: 80px;
+    height: 120px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 3px solid;
+    animation: outlinePulse 2s ease-in-out infinite;
+    filter: drop-shadow(0 0 10px currentColor);
+}
+
+.entity-outline-box.player {
+    border-color: #FFD700;
+    box-shadow: 
+        0 0 20px rgba(255, 215, 0, 0.6),
+        inset 0 0 20px rgba(255, 215, 0, 0.3);
+}
+
+.entity-outline-box.npc {
+    border-color: #6496FF;
+    box-shadow: 
+        0 0 20px rgba(100, 150, 255, 0.6),
+        inset 0 0 20px rgba(100, 150, 255, 0.3);
+}
+
+@keyframes outlinePulse {
+    0%, 100% { 
+        opacity: 0.8;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    50% { 
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.05);
+    }
+}
+
+/* Corner brackets on outline */
+.corner-bracket {
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    border: 3px solid;
+}
+
+.corner-bracket.top-left {
+    top: -3px;
+    left: -3px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.corner-bracket.top-right {
+    top: -3px;
+    right: -3px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.corner-bracket.bottom-left {
+    bottom: -3px;
+    left: -3px;
+    border-right: none;
+    border-top: none;
+}
+
+.corner-bracket.bottom-right {
+    bottom: -3px;
+    right: -3px;
+    border-left: none;
+    border-top: none;
+}
+
+.corner-bracket.player {
+    border-color: #FFD700;
+}
+
+.corner-bracket.npc {
+    border-color: #6496FF;
+}
+
+/* Center diamond marker */
+.center-marker {
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) rotate(45deg);
+    border: 2px solid;
+    animation: markerRotate 3s linear infinite;
+}
+
+.center-marker.player {
+    border-color: #FFD700;
+    background: rgba(255, 215, 0, 0.3);
+}
+
+.center-marker.npc {
+    border-color: #6496FF;
+    background: rgba(100, 150, 255, 0.3);
+}
+
+@keyframes markerRotate {
+    from { transform: translate(-50%, -50%) rotate(45deg); }
+    to { transform: translate(-50%, -50%) rotate(405deg); }
+}
+
+/* Info panel */
+.entity-info {
+    position: absolute;
+    left: calc(50% + 50px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    border: 2px solid;
+    padding: 12px 15px;
+    min-width: 220px;
+    backdrop-filter: blur(5px);
+    white-space: nowrap;
+}
+
+.entity-info.player {
+    border-color: rgba(255, 215, 0, 0.8);
+    box-shadow: 0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.entity-info.npc {
+    border-color: rgba(100, 150, 255, 0.8);
+    box-shadow: 0 0 15px rgba(100, 150, 255, 0.4);
+}
+
+.info-header {
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+}
+
+.info-header.player {
+    color: #FFD700;
+}
+
+.info-header.npc {
+    color: #6496FF;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    margin-bottom: 4px;
+    color: #CCCCCC;
+    gap: 15px;
+}
+
+.info-label {
+    color: #888;
+    text-transform: uppercase;
+    font-size: 10px;
+}
+
+.info-value {
+    color: #FFF;
+    font-weight: bold;
+}
+
+/* Health bar */
+.health-bar {
+    width: 100%;
+    height: 8px;
+    background: rgba(255, 0, 0, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 8px;
+    border: 1px solid rgba(255, 0, 0, 0.5);
+}
+
+.health-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #ffff00, #00ff00);
+    background-size: 200% 100%;
+    transition: width 0.3s ease;
+}
+
+/* Distance indicator */
+.distance-indicator {
+    position: absolute;
+    top: -25px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #FFD700;
+    border: 1px solid rgba(255, 215, 0, 0.5);
+}
+
 
 /* Scan lines effect */
 .scan-lines {
