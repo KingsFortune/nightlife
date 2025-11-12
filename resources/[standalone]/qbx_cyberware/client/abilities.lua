@@ -174,26 +174,29 @@ CreateThread(function()
                 local velX, velY = capturedVel.x, capturedVel.y
                 
                 SetPedCanRagdoll(ped, false)
-                TaskPlayAnim(ped, dict, anim, 8.0, -2.0, -1, 0, 0, false, false, false)
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Momentum preservation
+                -- Momentum preservation and smart cutoff
                 CreateThread(function()
                     local rollPed = PlayerPedId()
                     local startTime = GetGameTimer()
-                    local rollDuration = 600
                     
-                    -- Apply velocity during roll to maintain momentum
-                    while GetGameTimer() - startTime < rollDuration do
+                    -- Apply velocity for most of the animation (800ms lets hands touch ground and stand up)
+                    while GetGameTimer() - startTime < 800 do
                         SetEntityVelocity(rollPed, velX, velY, 0.0)
                         Wait(0)
                     end
                     
-                    -- Re-enable ragdoll
-                    SetPedCanRagdoll(rollPed, true)
+                    -- CUT animation right when standing up (before idle pause)
+                    StopAnimTask(rollPed, dict, anim, 1.0)
                     
-                    -- Sprint boost for smooth transition
+                    -- Re-enable ragdoll and restore velocity
+                    SetPedCanRagdoll(rollPed, true)
+                    SetEntityVelocity(rollPed, velX, velY, 0.0)
+                    
+                    -- Sprint boost for smooth transition into running
                     local player = PlayerId()
                     SetRunSprintMultiplierForPlayer(player, 1.12)
                     Wait(500)
