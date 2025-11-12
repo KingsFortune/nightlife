@@ -277,9 +277,10 @@ CreateThread(function()
                 if newVelX ~= vel.x or newVelY ~= vel.y then
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
-                    -- Force rotation to face velocity direction even during animations
+                    -- FORCE rotation to face velocity direction (override animations)
                     local velocityHeading = math.deg(math.atan2(newVelY, newVelX)) - 90.0
                     SetEntityHeading(ped, velocityHeading)
+                    SetPedDesiredHeading(ped, velocityHeading)
                 end
             end
             
