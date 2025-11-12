@@ -312,6 +312,7 @@ local lastJumpTime = 0
 local disableRagdollUntil = 0
 local isJumpingNow = false
 local lastGroundState = true
+local didDoubleJump = false
 
 CreateThread(function()
     while true do
@@ -342,6 +343,16 @@ CreateThread(function()
             -- Detect landing (transition from air to ground)
             if isOnGround and not lastGroundState then
                 print('^2[Cyberware]^7 Landed - Resetting jump state')
+                
+                -- If we did a double jump and just landed, trigger roll
+                if didDoubleJump then
+                    print('^2[Cyberware]^7 Triggering landing roll after double jump')
+                    -- Play parachute landing roll animation (smooth combat roll)
+                    lib.requestAnimDict('move_fall')
+                    TaskPlayAnim(ped, 'move_fall', 'land_roll', 8.0, -8.0, -1, 0, 0, false, false, false)
+                    didDoubleJump = false
+                end
+                
                 jumpCount = 0
                 isJumpingNow = false
             end
@@ -391,6 +402,7 @@ CreateThread(function()
                     jumpCount = 1
                     lastJumpTime = currentTime
                     isJumpingNow = true
+                    didDoubleJump = false
                     
                     print('^2[Cyberware]^7 Executing FIRST JUMP')
                     
@@ -401,7 +413,7 @@ CreateThread(function()
                     SetTimeout(120, function()
                         local p = PlayerPedId()
                         local v = GetEntityVelocity(p)
-                        SetEntityVelocity(p, v.x, v.y, 10.0) -- Reduced from 15.0
+                        SetEntityVelocity(p, v.x, v.y, 10.0)
                         print('^2[Cyberware]^7 First jump boost applied (10.0)')
                         
                         -- Clear isJumpingNow after 2 seconds to allow landing detection
@@ -417,17 +429,18 @@ CreateThread(function()
                     -- Double jump only once, in air, with delay
                     jumpCount = 2
                     lastJumpTime = currentTime
+                    didDoubleJump = true
                     
                     print('^2[Cyberware]^7 Executing DOUBLE JUMP')
                     
                     local v = GetEntityVelocity(ped)
-                    SetEntityVelocity(ped, v.x, v.y, 25.0) -- Increased from 20.0
+                    SetEntityVelocity(ped, v.x, v.y, 25.0)
                     
                     -- Disable ragdoll for 4 seconds after double jump
                     disableRagdollUntil = GetGameTimer() + 4000
                     
                     exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
-                    print('^2[Cyberware]^7 Double jump boost applied (20.0)')
+                    print('^2[Cyberware]^7 Double jump boost applied (25.0)')
                 else
                     print(string.format('^1[Cyberware]^7 Jump conditions NOT met - JumpCount: %d, TimeSince: %dms, OnGround: %s',
                         jumpCount, currentTime - lastJumpTime, tostring(isOnGround)))
