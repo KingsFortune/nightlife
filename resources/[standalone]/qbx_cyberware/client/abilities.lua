@@ -174,27 +174,19 @@ CreateThread(function()
                 local velX, velY = capturedVel.x, capturedVel.y
                 
                 SetPedCanRagdoll(ped, false)
-                TaskPlayAnim(ped, dict, anim, 8.0, -4.0, -1, 0, 0, false, false, false)
+                TaskPlayAnim(ped, dict, anim, 8.0, -2.0, -1, 0, 0, false, false, false)
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Momentum preservation + early cancel
+                -- Momentum preservation
                 CreateThread(function()
                     local rollPed = PlayerPedId()
                     local startTime = GetGameTimer()
-                    local rollDuration = 350
-                    local cancelled = false
+                    local rollDuration = 600
                     
-                    -- Apply velocity during roll
-                    while GetGameTimer() - startTime < rollDuration and not cancelled do
+                    -- Apply velocity during roll to maintain momentum
+                    while GetGameTimer() - startTime < rollDuration do
                         SetEntityVelocity(rollPed, velX, velY, 0.0)
-                        
-                        -- Early cancel on movement or aim
-                        if IsControlPressed(0, 32) or IsControlPressed(0, 33) or IsControlPressed(0, 34) or IsControlPressed(0, 35) or IsControlPressed(0, 25) then
-                            StopAnimTask(rollPed, dict, anim, 1.0)
-                            cancelled = true
-                            break
-                        end
                         Wait(0)
                     end
                     
