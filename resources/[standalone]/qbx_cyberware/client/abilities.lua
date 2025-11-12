@@ -170,20 +170,14 @@ CreateThread(function()
                         -- Wait for land animation to finish (land_fall is very short - ~200ms)
                         Wait(250)
                         
-                        -- Give forward momentum for roll effect
+                        -- Give strong forward momentum for roll effect
                         local heading = GetEntityHeading(rollPed)
-                        local forwardX = -math.sin(math.rad(heading)) * 3.5
-                        local forwardY = math.cos(math.rad(heading)) * 3.5
-                        local vel = GetEntityVelocity(rollPed)
-                        SetEntityVelocity(rollPed, vel.x + forwardX, vel.y + forwardY, 0.0)
+                        local forwardX = -math.sin(math.rad(heading)) * 5.0
+                        local forwardY = math.cos(math.rad(heading)) * 5.0
+                        SetEntityVelocity(rollPed, forwardX, forwardY, 0.2)
                         
-                        -- Use weapon crouch animation (guaranteed to exist in GTA V)
-                        lib.requestAnimDict('weapons@first_person@aim_rng@generic@pistol@')
-                        TaskPlayAnim(rollPed, 'weapons@first_person@aim_rng@generic@pistol@', 'aim_low_loop', 8.0, -8.0, 500, 2, 0, false, false, false)
-                        
-                        -- Clean up after animation
-                        Wait(500)
-                        ClearPedTasks(rollPed)
+                        -- Brief controlled ragdoll for roll physics
+                        SetPedToRagdoll(rollPed, 400, 400, 0, true, true, false)
                         
                         exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                     end)
