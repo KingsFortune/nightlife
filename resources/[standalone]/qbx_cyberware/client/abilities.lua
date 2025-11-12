@@ -158,6 +158,8 @@ end
 -- REINFORCED TENDONS: Enhanced Jump & Double Jump
 local jumpCount = 0
 local lastJumpTime = 0
+local pendingJumpBoost = false
+local jumpBoostType = nil
 
 CreateThread(function()
     while true do
@@ -184,18 +186,10 @@ CreateThread(function()
                 local moveY = 0.0
                 
                 -- WASD controls in air
-                if IsControlPressed(0, 32) then -- W
-                    moveY = moveY + 0.15
-                end
-                if IsControlPressed(0, 33) then -- S
-                    moveY = moveY - 0.15
-                end
-                if IsControlPressed(0, 34) then -- A
-                    moveX = moveX - 0.15
-                end
-                if IsControlPressed(0, 35) then -- D
-                    moveX = moveX + 0.15
-                end
+                if IsControlPressed(0, 32) then moveY = moveY + 0.15 end -- W
+                if IsControlPressed(0, 33) then moveY = moveY - 0.15 end -- S
+                if IsControlPressed(0, 34) then moveX = moveX - 0.15 end -- A
+                if IsControlPressed(0, 35) then moveX = moveX + 0.15 end -- D
                 
                 -- Apply air movement
                 if moveX ~= 0.0 or moveY ~= 0.0 then
@@ -208,14 +202,23 @@ CreateThread(function()
                 end
             end
             
-            -- Check if player is in air (not on ground)
+            -- Apply pending jump boost (delayed from jump detection)
+            if pendingJumpBoost then
+                pendingJumpBoost = false
+                local vel = GetEntityVelocity(ped)
+                if jumpBoostType == 'first' then
+                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_first * 3.0)
+                elseif jumpBoostType == 'double' then
+                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_double * 3.5)
+                    exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
+                end
+            end
+            
+            -- Check if player is on ground
             local coords = GetEntityCoords(ped)
             local ray = StartShapeTestRay(coords.x, coords.y, coords.z, coords.x, coords.y, coords.z - 2.0, 1, ped, 0)
             local _, hit, _, _, _ = GetShapeTestResult(ray)
             local isOnGround = hit == 1
-            
-            -- Get current time
-            local currentTime = GetGameTimer()
             
             -- Reset jump count when on ground
             if isOnGround then
@@ -224,30 +227,22 @@ CreateThread(function()
             
             -- Detect jump press
             if IsControlJustPressed(0, 22) then -- SPACE key
+                local currentTime = GetGameTimer()
                 local timeSinceLastJump = currentTime - lastJumpTime
                 
                 -- First jump (on ground)
                 if isOnGround and timeSinceLastJump > 500 then
                     jumpCount = 1
                     lastJumpTime = currentTime
-                    
-                    -- Apply first jump boost
-                    Wait(80)
-                    local vel = GetEntityVelocity(ped)
-                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_first * 3.0)
+                    pendingJumpBoost = true
+                    jumpBoostType = 'first'
                     
                 -- Double jump (in air, after first jump, with delay)
                 elseif not isOnGround and jumpCount == 1 and timeSinceLastJump > 300 then
                     jumpCount = 2
                     lastJumpTime = currentTime
-                    
-                    -- Apply double jump boost
-                    Wait(50)
-                    local vel = GetEntityVelocity(ped)
-                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_double * 3.5)
-                    
-                    -- Visual feedback
-                    exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
+                    pendingJumpBoost = true
+                    jumpBoostType = 'double'
                 end
             end
         else
