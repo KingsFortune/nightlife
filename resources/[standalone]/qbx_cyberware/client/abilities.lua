@@ -129,6 +129,38 @@ local disableRagdollUntil = 0
 local isJumpingNow = false
 local lastGroundState = true
 local didDoubleJump = false
+local forceRollOnLanding = false
+
+-- Monitor for land_fall animation and replace with combat roll
+CreateThread(function()
+    while true do
+        Wait(0)
+        
+        if forceRollOnLanding and HasImplant('reinforced_tendons') then
+            local ped = PlayerPedId()
+            
+            -- Check if land_fall animation is playing
+            if IsEntityPlayingAnim(ped, 'move_fall', 'land_fall', 3) then
+                print('^1[Cyberware]^7 DETECTED land_fall animation, REPLACING with combat roll!')
+                
+                -- Stop the land_fall animation
+                StopAnimTask(ped, 'move_fall', 'land_fall', 1.0)
+                ClearPedTasksImmediately(ped)
+                
+                -- Request and play combat roll
+                RequestAnimDict('move_jump')
+                while not HasAnimDictLoaded('move_jump') do
+                    Wait(0)
+                end
+                
+                TaskPlayAnim(ped, 'move_jump', 'roll_fwd', 8.0, -8.0, 900, 0, 0.0, false, false, false)
+                print('^2[Cyberware]^7 Combat roll animation FORCED!')
+                
+                forceRollOnLanding = false
+            end
+        end
+    end
+end)
 
 CreateThread(function()
     while true do
@@ -162,17 +194,55 @@ CreateThread(function()
                 
                 -- Combat roll on double jump landing
                 if didDoubleJump then
+                    print('^3[Cyberware]^7 didDoubleJump flag is TRUE, attempting combat roll...')
                     didDoubleJump = false
+                    forceRollOnLanding = false  -- Clear the flag once landed
                     
-                    -- Simply disable ragdoll and give notification - animations are too buggy
-                    exports.qbx_core:Notify('🎯 Perfect Landing!', 'success', 1000)
-                    
-                    -- Alternative: Force ragdoll for brief roll effect
+                    -- Force combat roll animation immediately on landing
                     CreateThread(function()
                         local ped = PlayerPedId()
-                        SetPedToRagdoll(ped, 500, 500, 0, true, true, false)
-                        Wait(500)
+                        print('^3[Cyberware]^7 Starting combat roll thread for ped: '..ped)
+                        
+                        -- Clear any pending tasks
+                        ClearPedTasksImmediately(ped)
+                        print('^3[Cyberware]^7 Cleared ped tasks')
+                        
+                        Wait(50)  -- Small delay to ensure we're grounded
+                        
+                        -- Request animation
+                        local animDict = 'move_jump'
+                        RequestAnimDict(animDict)
+                        local timeout = 0
+                        while not HasAnimDictLoaded(animDict) and timeout < 2000 do
+                            Wait(10)
+                            timeout = timeout + 10
+                        end
+                        
+                        if HasAnimDictLoaded(animDict) then
+                            print('^2[Cyberware]^7 Animation dict loaded successfully')
+                            
+                            -- Play the roll animation with HIGHEST priority
+                            local success = TaskPlayAnim(ped, animDict, 'roll_fwd', 8.0, -8.0, -1, 1, 0.0, false, false, false)
+                            print('^2[Cyberware]^7 TaskPlayAnim called, success: '..tostring(success))
+                            
+                            -- Monitor if animation is actually playing
+                            Wait(100)
+                            local isPlaying = IsEntityPlayingAnim(ped, animDict, 'roll_fwd', 3)
+                            print('^2[Cyberware]^7 Is animation playing after 100ms? '..tostring(isPlaying))
+                            
+                            exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
+                            
+                            -- Let it play for a bit then clear
+                            Wait(800)
+                            print('^3[Cyberware]^7 Clearing combat roll animation')
+                            ClearPedTasks(ped)
+                        else
+                            print('^1[Cyberware]^7 FAILED to load animation dict: '..animDict..' after '..timeout..'ms')
+                            exports.qbx_core:Notify('🎯 Perfect Landing!', 'success', 1000)
+                        end
                     end)
+                else
+                    print('^3[Cyberware]^7 didDoubleJump flag is FALSE, no combat roll')
                 end
                 
                 jumpCount = 0
@@ -253,8 +323,9 @@ CreateThread(function()
                     jumpCount = 2
                     lastJumpTime = currentTime
                     didDoubleJump = true
+                    forceRollOnLanding = true  -- Flag to replace land_fall with combat roll
                     
-                    print('^2[Cyberware]^7 Executing DOUBLE JUMP')
+                    print('^2[Cyberware]^7 Executing DOUBLE JUMP - forceRollOnLanding set to TRUE')
                     
                     local v = GetEntityVelocity(ped)
                     SetEntityVelocity(ped, v.x, v.y, 25.0)
