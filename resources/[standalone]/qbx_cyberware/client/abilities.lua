@@ -203,41 +203,55 @@ CreateThread(function()
                         local ped = PlayerPedId()
                         print('^3[Cyberware]^7 Starting combat roll thread for ped: '..ped)
                         
-                        -- Clear any pending tasks
-                        ClearPedTasksImmediately(ped)
-                        print('^3[Cyberware]^7 Cleared ped tasks')
+                        -- Try multiple different roll animations
+                        local rollAnimations = {
+                            {dict = 'parachute@parachute', anim = 'chute_land_stand'},
+                            {dict = 'move_fall', anim = 'land_roll'},
+                            {dict = 'misschinese2_crystalmazemcs1_cs', anim = 'dive_fall_over'},
+                            {dict = 'move_strafe@stealth', anim = 'idle'},
+                        }
                         
-                        Wait(50)  -- Small delay to ensure we're grounded
+                        local animPlayed = false
                         
-                        -- Request animation
-                        local animDict = 'move_jump'
-                        RequestAnimDict(animDict)
-                        local timeout = 0
-                        while not HasAnimDictLoaded(animDict) and timeout < 2000 do
-                            Wait(10)
-                            timeout = timeout + 10
+                        for i, rollAnim in ipairs(rollAnimations) do
+                            print('^3[Cyberware]^7 Trying animation: '..rollAnim.dict..' / '..rollAnim.anim)
+                            
+                            -- Request animation
+                            RequestAnimDict(rollAnim.dict)
+                            local timeout = 0
+                            while not HasAnimDictLoaded(rollAnim.dict) and timeout < 1000 do
+                                Wait(10)
+                                timeout = timeout + 10
+                            end
+                            
+                            if HasAnimDictLoaded(rollAnim.dict) then
+                                print('^2[Cyberware]^7 Dict loaded: '..rollAnim.dict)
+                                
+                                -- Clear tasks first
+                                ClearPedTasks(ped)
+                                Wait(50)
+                                
+                                -- Try to play
+                                TaskPlayAnim(ped, rollAnim.dict, rollAnim.anim, 8.0, -8.0, 1000, 0, 0, false, false, false)
+                                print('^2[Cyberware]^7 Animation started')
+                                
+                                -- Check if it's playing
+                                Wait(100)
+                                if IsEntityPlayingAnim(ped, rollAnim.dict, rollAnim.anim, 3) then
+                                    print('^2[Cyberware]^7 SUCCESS! Animation is playing: '..rollAnim.anim)
+                                    exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
+                                    animPlayed = true
+                                    break
+                                else
+                                    print('^1[Cyberware]^7 Animation NOT playing, trying next...')
+                                end
+                            else
+                                print('^1[Cyberware]^7 Failed to load dict: '..rollAnim.dict)
+                            end
                         end
                         
-                        if HasAnimDictLoaded(animDict) then
-                            print('^2[Cyberware]^7 Animation dict loaded successfully')
-                            
-                            -- Play the roll animation with HIGHEST priority
-                            local success = TaskPlayAnim(ped, animDict, 'roll_fwd', 8.0, -8.0, -1, 1, 0.0, false, false, false)
-                            print('^2[Cyberware]^7 TaskPlayAnim called, success: '..tostring(success))
-                            
-                            -- Monitor if animation is actually playing
-                            Wait(100)
-                            local isPlaying = IsEntityPlayingAnim(ped, animDict, 'roll_fwd', 3)
-                            print('^2[Cyberware]^7 Is animation playing after 100ms? '..tostring(isPlaying))
-                            
-                            exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
-                            
-                            -- Let it play for a bit then clear
-                            Wait(800)
-                            print('^3[Cyberware]^7 Clearing combat roll animation')
-                            ClearPedTasks(ped)
-                        else
-                            print('^1[Cyberware]^7 FAILED to load animation dict: '..animDict..' after '..timeout..'ms')
+                        if not animPlayed then
+                            print('^1[Cyberware]^7 ALL animations failed - giving up')
                             exports.qbx_core:Notify('🎯 Perfect Landing!', 'success', 1000)
                         end
                     end)
