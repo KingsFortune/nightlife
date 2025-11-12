@@ -170,18 +170,26 @@ CreateThread(function()
                 rollPending = false
                 
                 local dict = 'move_strafe@roll'
-                local anim = 'combatroll_fwd_p1_00'
+                local animStart = 'combatroll_fwd_p1_00'  -- Roll down
+                local animEnd = 'combatroll_fwd_p2_00'    -- Roll recovery
                 
                 -- INSTANT interrupt and force roll
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
-                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, 1000, 0, 0, false, false, false)
                 
-                print('^2[Cyberware]^7 Roll animation playing!')
+                -- Play first part (roll down)
+                TaskPlayAnim(ped, dict, animStart, 8.0, -8.0, -1, 0, 0, false, false, false)
+                print('^2[Cyberware]^7 Roll start animation playing!')
+                
+                -- Wait for first animation to finish (~300ms), then play recovery
+                Wait(350)
+                TaskPlayAnim(ped, dict, animEnd, 8.0, -8.0, -1, 0, 0, false, false, false)
+                print('^2[Cyberware]^7 Roll recovery animation playing!')
+                
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Re-enable ragdoll after animation duration
-                Wait(1000)
+                -- Re-enable ragdoll after full roll completes
+                Wait(350)
                 SetPedCanRagdoll(ped, true)
                 
                 print('^2[Cyberware]^7 Roll complete')
