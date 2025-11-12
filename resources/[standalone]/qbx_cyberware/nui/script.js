@@ -52,24 +52,15 @@ function updateMarkers() {
         const entityData = entityDataCache[entity.id];
         const entityType = entity.isPlayer ? 'player' : 'npc';
         
+        // Create wrapper - positioned at exact pixel coordinates
         const wrapper = document.createElement('div');
         wrapper.className = 'entity-wrapper';
-        wrapper.style.left = `${entity.x}px`;
-        wrapper.style.top = `${entity.y}px`;
+        wrapper.style.position = 'absolute';
+        wrapper.style.left = entity.x + 'px';
+        wrapper.style.top = entity.y + 'px';
+        wrapper.style.transform = 'translate(-50%, -100%)'; // Center horizontally, position above
         
-        const outlineBox = document.createElement('div');
-        outlineBox.className = `entity-outline-box ${entityType}`;
-        ['top-left', 'top-right', 'bottom-left', 'bottom-right'].forEach(corner => {
-            const bracket = document.createElement('div');
-            bracket.className = `corner-bracket ${corner} ${entityType}`;
-            outlineBox.appendChild(bracket);
-        });
-        wrapper.appendChild(outlineBox);
-        
-        const marker = document.createElement('div');
-        marker.className = `center-marker ${entityType}`;
-        wrapper.appendChild(marker);
-        
+        // Create info panel only (no CSS outline, using game rendering)
         const info = document.createElement('div');
         info.className = `entity-info ${entityType}`;
         info.innerHTML = `

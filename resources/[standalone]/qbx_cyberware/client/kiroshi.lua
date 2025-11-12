@@ -167,18 +167,83 @@ end
 -- Update entity screen positions
 CreateThread(function()
     while true do
-        Wait(100)
+        Wait(0) -- Run every frame for smooth rendering
         
         if kiroshiActive and #scannedEntities > 0 then
             local entities = {}
+            local myCoords = GetEntityCoords(cache.ped)
             
             for _, entity in ipairs(scannedEntities) do
                 if DoesEntityExist(entity.entity) then
-                    local coords = GetEntityCoords(entity.entity)
+                    -- Update distance in real-time
+                    local entityCoords = GetEntityCoords(entity.entity)
+                    local distance = #(myCoords - entityCoords)
+                    
+                    -- Update health in real-time
+                    local currentHealth = GetEntityHealth(entity.entity)
+                    local maxHealth = GetEntityMaxHealth(entity.entity)
+                    local healthPercent = math.floor((currentHealth / maxHealth) * 100)
+                    
+                    -- Draw 3D outline box around entity
+                    local minDim, maxDim = GetModelDimensions(GetEntityModel(entity.entity))
+                    local entityPos = GetEntityCoords(entity.entity)
+                    local entityRot = GetEntityRotation(entity.entity, 2)
+                    
+                    -- Get entity dimensions
+                    local height = maxDim.z - minDim.z
+                    local width = (maxDim.x - minDim.x) + (maxDim.y - minDim.y)
+                    
+                    -- Set color based on type (gold for players, blue for NPCs)
+                    local r, g, b, a
+                    if entity.isPlayer then
+                        r, g, b, a = 255, 215, 0, 200  -- Gold
+                    else
+                        r, g, b, a = 100, 150, 255, 200  -- Blue
+                    end
+                    
+                    -- Draw outline box around entity
+                    DrawMarker(
+                        28, -- Marker type (upside down cone/cylinder)
+                        entityPos.x, entityPos.y, entityPos.z,
+                        0.0, 0.0, 0.0,
+                        0.0, 0.0, 0.0,
+                        width * 0.5, width * 0.5, height,
+                        r, g, b, a,
+                        false, false, 2, false, nil, nil, false
+                    )
+                    
+                    -- Draw corner brackets in 3D space
+                    local cornerSize = 0.15
+                    local corners = {
+                        vector3(minDim.x, minDim.y, maxDim.z), -- Top front left
+                        vector3(maxDim.x, minDim.y, maxDim.z), -- Top front right
+                        vector3(minDim.x, maxDim.y, maxDim.z), -- Top back left
+                        vector3(maxDim.x, maxDim.y, maxDim.z), -- Top back right
+                        vector3(minDim.x, minDim.y, minDim.z), -- Bottom front left
+                        vector3(maxDim.x, minDim.y, minDim.z), -- Bottom front right
+                        vector3(minDim.x, maxDim.y, minDim.z), -- Bottom back left
+                        vector3(maxDim.x, maxDim.y, minDim.z), -- Bottom back right
+                    }
+                    
+                    -- Draw glowing lines at corners
+                    for _, corner in ipairs(corners) do
+                        local worldCorner = GetOffsetFromEntityInWorldCoords(entity.entity, corner.x, corner.y, corner.z)
+                        DrawMarker(
+                            1, -- Cylinder
+                            worldCorner.x, worldCorner.y, worldCorner.z,
+                            0.0, 0.0, 0.0,
+                            0.0, 0.0, 0.0,
+                            0.05, 0.05, 0.05,
+                            r, g, b, 255,
+                            false, false, 2, false, nil, nil, false
+                        )
+                    end
+                    
+                    -- Get head position for NUI info panel
                     local headPos = GetPedBoneCoords(entity.entity, 0x796E, 0.0, 0.0, 0.0)
                     
                     if headPos.x == 0.0 and headPos.y == 0.0 then
-                        headPos = vector3(coords.x, coords.y, coords.z + 1.0)
+                        headPos = vector3(entityPos.x, entityPos.y, entityPos.z + height)
                     else
                         headPos = vector3(headPos.x, headPos.y, headPos.z + 0.3)
                     end
@@ -195,21 +260,24 @@ CreateThread(function()
                             name = entity.name,
                             job = entity.job,
                             gang = entity.gang,
-                            health = entity.health,
-                            distance = entity.distance,
-                            x = screenX * resX,
-                            y = screenY * resY
+                            health = healthPercent,
+                            distance = distance,
+                            x = math.floor(screenX * resX),
+                            y = math.floor(screenY * resY)
                         })
                     end
                 end
             end
             
-            SendNUIMessage({
-                action = 'updateEntities',
-                entities = entities
-            })
+            -- Only update NUI if we have entities to show
+            if #entities > 0 then
+                SendNUIMessage({
+                    action = 'updateEntities',
+                    entities = entities
+                })
+            end
         else
-            Wait(400)
+            Wait(100)
         end
     end
 end)
