@@ -169,6 +169,12 @@ CreateThread(function()
                 didDoubleJump = false
                 rollPending = false
                 
+                -- CAPTURE VELOCITY before we lose it
+                local velocity = GetEntityVelocity(ped)
+                local horizontalVel = vector2(velocity.x, velocity.y)
+                local speed = #horizontalVel
+                print('^3[Cyberware]^7 Captured velocity - Speed: '..speed)
+                
                 local dict = 'move_strafe@roll'
                 local animStart = 'combatroll_fwd_p1_00'  -- Roll down
                 local animEnd = 'combatroll_fwd_p2_00'    -- Roll recovery
@@ -183,19 +189,28 @@ CreateThread(function()
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Chain animations asynchronously so we don't block movement
+                -- Chain animations and MAINTAIN MOMENTUM
                 CreateThread(function()
                     local rollPed = PlayerPedId()
                     
-                    -- Wait for first animation to finish
-                    Wait(300)
+                    -- Keep applying velocity during roll to maintain momentum
+                    local rollStart = GetGameTimer()
+                    while GetGameTimer() - rollStart < 300 do
+                        SetEntityVelocity(rollPed, velocity.x, velocity.y, 0.0)
+                        Wait(0)
+                    end
+                    
                     TaskPlayAnim(rollPed, dict, animEnd, 8.0, -8.0, -1, 0, 0, false, false, false)
                     print('^2[Cyberware]^7 Roll recovery animation playing!')
                     
-                    -- Re-enable ragdoll early to allow movement during recovery
-                    Wait(150)
-                    SetPedCanRagdoll(rollPed, true)
+                    -- Continue momentum during recovery
+                    local recoveryStart = GetGameTimer()
+                    while GetGameTimer() - recoveryStart < 150 do
+                        SetEntityVelocity(rollPed, velocity.x, velocity.y, 0.0)
+                        Wait(0)
+                    end
                     
+                    SetPedCanRagdoll(rollPed, true)
                     print('^2[Cyberware]^7 Roll complete - movement restored')
                 end)
             end
