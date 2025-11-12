@@ -171,11 +171,12 @@ CreateThread(function()
                         Wait(200)
                         
                         -- Use the ACTUAL combat roll animation from GTA V
-                        local dict = 'move_strafe@roll_fps@combatroll_fwd_p1_-90'
+                        local dict = 'move_strafe@roll'
+                        local anim = 'combatroll_fwd_p1_45'
                         lib.requestAnimDict(dict)
                         
                         -- Play combat roll
-                        TaskPlayAnim(rollPed, dict, 'combatroll_fwd_p1_-90', 8.0, -8.0, -1, 0, 0, false, false, false)
+                        TaskPlayAnim(rollPed, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
                         
                         -- Let it play for duration
                         Wait(800)
