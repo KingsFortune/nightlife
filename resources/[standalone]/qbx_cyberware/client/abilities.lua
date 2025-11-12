@@ -345,13 +345,13 @@ CreateThread(function()
                         
                         local v = GetEntityVelocity(ped)
                         -- MUCH stronger boost when falling to overcome downward momentum
-                        local verticalBoost = 30.0
+                        local verticalBoost = 25.0
                         if v.z < -10.0 then
                             -- Falling very fast from high building: massive boost
-                            verticalBoost = 40.0
+                            verticalBoost = 35.0
                         elseif v.z < -5.0 then
                             -- Falling moderately fast: strong boost
-                            verticalBoost = 35.0
+                            verticalBoost = 30.0
                         end
                         
                         -- Preserve and boost horizontal velocity
