@@ -3,6 +3,68 @@ local config = require 'config.shared'
 local kiroshiActive = false
 local targetedEntity = nil
 local cooldowns = {}
+local npcCache = {} -- Cache NPC data so names stay consistent
+
+-- NPC Name Lists
+local maleNames = {
+    "Michael", "Trevor", "Franklin", "Jason", "Marcus", "David", "James", "Robert", "John", "William",
+    "Richard", "Thomas", "Charles", "Daniel", "Matthew", "Anthony", "Donald", "Mark", "Paul", "Steven",
+    "Kevin", "Brian", "George", "Kenneth", "Edward", "Ronald", "Timothy", "Jason", "Jeffrey", "Ryan"
+}
+
+local femaleNames = {
+    "Amanda", "Patricia", "Jennifer", "Linda", "Barbara", "Elizabeth", "Jessica", "Sarah", "Karen", "Nancy",
+    "Lisa", "Betty", "Margaret", "Sandra", "Ashley", "Dorothy", "Kimberly", "Emily", "Donna", "Michelle",
+    "Carol", "Amanda", "Melissa", "Deborah", "Stephanie", "Rebecca", "Laura", "Sharon", "Cynthia", "Kathleen"
+}
+
+local lastNames = {
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
+    "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
+    "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson"
+}
+
+local occupations = {
+    "Security Guard", "Delivery Driver", "Store Clerk", "Mechanic", "Construction Worker", "Chef",
+    "Bartender", "Taxi Driver", "Janitor", "Accountant", "Lawyer", "Doctor", "Nurse", "Teacher",
+    "Salesperson", "Manager", "Engineer", "Programmer", "Artist", "Musician", "Writer", "Photographer",
+    "Real Estate Agent", "Insurance Agent", "Bank Teller", "Postal Worker", "Electrician", "Plumber"
+}
+
+-- Generate random NPC data based on ped model
+local function GenerateNPCData(ped)
+    local pedId = NetworkGetNetworkIdFromEntity(ped)
+    
+    -- Check cache first
+    if npcCache[pedId] then
+        return npcCache[pedId]
+    end
+    
+    -- Determine gender
+    local isMale = IsPedMale(ped)
+    
+    -- Generate name
+    local firstName
+    if isMale then
+        firstName = maleNames[math.random(#maleNames)]
+    else
+        firstName = femaleNames[math.random(#femaleNames)]
+    end
+    local lastName = lastNames[math.random(#lastNames)]
+    local fullName = firstName .. " " .. lastName
+    
+    -- Generate occupation
+    local occupation = occupations[math.random(#occupations)]
+    
+    -- Cache the data
+    local npcData = {
+        name = fullName,
+        job = occupation
+    }
+    npcCache[pedId] = npcData
+    
+    return npcData
+end
 
 -- Check if ability is on cooldown
 local function IsOnCooldown(implantId)
@@ -38,6 +100,7 @@ RegisterNetEvent('qbx_cyberware:client:resetKiroshi', function()
     end
     cooldowns = {}
     targetedEntity = nil
+    npcCache = {}
     
     SendNUIMessage({
         action = 'clearCache'
@@ -180,13 +243,14 @@ CreateThread(function()
                                 end, GetPlayerServerId(NetworkGetPlayerIndexFromPed(entityHit)))
                             end
                         else
-                            -- NPC data
+                            -- NPC data - generate random info
+                            local npcData = GenerateNPCData(entityHit)
                             SendNUIMessage({
                                 action = 'updateTarget',
                                 target = {
                                     isPlayer = false,
-                                    name = 'NPC',
-                                    job = 'Civilian',
+                                    name = npcData.name,
+                                    job = npcData.job,
                                     health = healthPercent,
                                     distance = string.format("%.1f", distance),
                                     boxX = boxX,
