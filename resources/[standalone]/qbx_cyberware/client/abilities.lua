@@ -264,9 +264,7 @@ CreateThread(function()
                 local vel = GetEntityVelocity(ped)
                 
                 -- MASSIVELY increased air control for fluid movement
-                local moveSpeed = 0.8
-                local targetVelX = 0.0
-                local targetVelY = 0.0
+                local moveSpeed = 0.5
                 local hasInput = false
                 
                 -- Get camera heading for relative controls
@@ -303,14 +301,13 @@ CreateThread(function()
                 end
                 
                 if hasInput and inputHeading then
-                    -- Calculate target velocity in input direction
+                    -- ADD to existing velocity (preserve momentum from jump)
                     local rad = math.rad(inputHeading)
-                    targetVelX = -math.sin(rad) * moveSpeed
-                    targetVelY = math.cos(rad) * moveSpeed
+                    local addVelX = -math.sin(rad) * moveSpeed
+                    local addVelY = math.cos(rad) * moveSpeed
                     
-                    -- Blend current velocity with target (smoother control)
-                    local newVelX = vel.x + (targetVelX - vel.x) * 0.3
-                    local newVelY = vel.y + (targetVelY - vel.y) * 0.3
+                    local newVelX = vel.x + addVelX
+                    local newVelY = vel.y + addVelY
                     
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
