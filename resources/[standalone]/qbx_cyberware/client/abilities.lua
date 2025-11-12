@@ -152,7 +152,7 @@ CreateThread(function()
                 
                 -- Preload animation NOW while still falling
                 local dict = 'move_fall@beastjump'
-                local anim = 'land_roll'
+                local anim = 'high_land_run'
                 
                 RequestAnimDict(dict)
                 while not HasAnimDictLoaded(dict) do
@@ -170,25 +170,23 @@ CreateThread(function()
                 rollPending = false
                 
                 local dict = 'move_fall@beastjump'
-                local anim = 'land_roll'
+                local anim = 'high_land_run'
                 
                 -- INSTANT interrupt and force roll
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
                 
-                -- Play landing roll animation with shorter duration
-                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, 400, 0, 0, false, false, false)
-                print('^2[Cyberware]^7 Landing roll animation playing!')
+                -- Play high land run animation
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
+                print('^2[Cyberware]^7 High land run animation playing!')
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Restore control FAST
+                -- Re-enable ragdoll after animation
                 CreateThread(function()
-                    Wait(350)
-                    local rollPed = PlayerPedId()
-                    ClearPedTasks(rollPed)
-                    SetPedCanRagdoll(rollPed, true)
-                    print('^2[Cyberware]^7 Roll complete - control restored!')
+                    Wait(500)
+                    SetPedCanRagdoll(PlayerPedId(), true)
+                    print('^2[Cyberware]^7 Animation complete!')
                 end)
             end
         else
