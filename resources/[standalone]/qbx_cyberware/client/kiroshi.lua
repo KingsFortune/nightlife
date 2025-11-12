@@ -205,12 +205,12 @@ CreateThread(function()
                     -- Set color based on type (gold for players, blue for NPCs)
                     local r, g, b, a
                     if entity.isPlayer then
-                        r, g, b, a = 255, 215, 0, 200  -- Gold
+                        r, g, b, a = 255, 215, 0, 255  -- Gold, full opacity
                     else
-                        r, g, b, a = 100, 150, 255, 200  -- Blue
+                        r, g, b, a = 100, 150, 255, 255  -- Blue, full opacity
                     end
                     
-                    -- Draw skeleton using ped bones
+                    -- Draw skeleton using ped bones with glow effect
                     local bones = {
                         -- Head to neck
                         {0x796E, 0xFB71},  -- SKEL_Head to SKEL_Neck_1
@@ -242,25 +242,37 @@ CreateThread(function()
                         {0xCC4D, 0x512D},  -- SKEL_R_Foot to SKEL_R_Toe
                     }
                     
-                    -- Draw lines between bones
+                    -- Draw multiple overlapping lines for thickness and glow
                     for _, bonePair in ipairs(bones) do
                         local bone1Coords = GetPedBoneCoords(entity.entity, bonePair[1], 0.0, 0.0, 0.0)
                         local bone2Coords = GetPedBoneCoords(entity.entity, bonePair[2], 0.0, 0.0, 0.0)
                         
                         -- Only draw if both bones exist
                         if bone1Coords.x ~= 0.0 and bone2Coords.x ~= 0.0 then
-                            DrawLine(bone1Coords.x, bone1Coords.y, bone1Coords.z, 
-                                    bone2Coords.x, bone2Coords.y, bone2Coords.z, 
-                                    r, g, b, a)
+                            -- Draw main line (thicker by drawing multiple times)
+                            for i = 1, 3 do
+                                DrawLine(bone1Coords.x, bone1Coords.y, bone1Coords.z, 
+                                        bone2Coords.x, bone2Coords.y, bone2Coords.z, 
+                                        r, g, b, a)
+                            end
+                            
+                            -- Draw glow lines (slightly transparent, wider)
+                            for i = 1, 2 do
+                                DrawLine(bone1Coords.x, bone1Coords.y, bone1Coords.z, 
+                                        bone2Coords.x, bone2Coords.y, bone2Coords.z, 
+                                        r, g, b, 150)
+                            end
                         end
                     end
                     
-                    -- Draw small spheres at joint positions for emphasis
+                    -- Draw glowing spheres at joint positions
                     local jointBones = {0x796E, 0xFB71, 0x5C57, 0x60F0, 0xE0FD, 0xB1C5, 0xEEEB, 0x49D9, 0xDEAD, 0xB3FE, 0x3FCF, 0x08C4, 0x3779, 0xCC4D}
                     for _, bone in ipairs(jointBones) do
                         local boneCoords = GetPedBoneCoords(entity.entity, bone, 0.0, 0.0, 0.0)
                         if boneCoords.x ~= 0.0 then
-                            DrawMarker(28, boneCoords.x, boneCoords.y, boneCoords.z, 0, 0, 0, 0, 0, 0, 0.03, 0.03, 0.03, r, g, b, 255, false, false, 2, false, nil, nil, false)
+                            -- Draw multiple markers for glow effect
+                            DrawMarker(28, boneCoords.x, boneCoords.y, boneCoords.z, 0, 0, 0, 0, 0, 0, 0.08, 0.08, 0.08, r, g, b, 200, false, false, 2, false, nil, nil, false)
+                            DrawMarker(28, boneCoords.x, boneCoords.y, boneCoords.z, 0, 0, 0, 0, 0, 0, 0.12, 0.12, 0.12, r, g, b, 100, false, false, 2, false, nil, nil, false)
                         end
                     end
                     

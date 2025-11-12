@@ -164,33 +164,14 @@ CreateThread(function()
                 if didDoubleJump then
                     didDoubleJump = false
                     
-                    -- Play combat roll animation in a thread
+                    -- Simply disable ragdoll and give notification - animations are too buggy
+                    exports.qbx_core:Notify('🎯 Perfect Landing!', 'success', 1000)
+                    
+                    -- Alternative: Force ragdoll for brief roll effect
                     CreateThread(function()
-                        local playerPed = PlayerPedId()
-                        
-                        -- Request multiple animation dictionaries
-                        local animDict = 'missheistdockssetup1ig_10@base'
-                        local animName = 'dive_fwd_loop'
-                        
-                        RequestAnimDict(animDict)
-                        local timeout = 0
-                        while not HasAnimDictLoaded(animDict) and timeout < 1000 do
-                            Wait(10)
-                            timeout = timeout + 10
-                        end
-                        
-                        if HasAnimDictLoaded(animDict) then
-                            -- Force the animation to play
-                            TaskPlayAnim(playerPed, animDict, animName, 8.0, -8.0, 600, 0, 0.0, false, false, false)
-                            exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
-                            print('^2[Cyberware]^7 Playing dive animation')
-                            
-                            Wait(700)
-                            ClearPedTasks(playerPed)
-                        else
-                            print('^1[Cyberware]^7 Failed to load animation dict')
-                            exports.qbx_core:Notify('🎯 Perfect Landing!', 'success', 1000)
-                        end
+                        local ped = PlayerPedId()
+                        SetPedToRagdoll(ped, 500, 500, 0, true, true, false)
+                        Wait(500)
                     end)
                 end
                 
