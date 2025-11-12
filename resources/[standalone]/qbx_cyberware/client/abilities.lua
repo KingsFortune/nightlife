@@ -332,8 +332,18 @@ CreateThread(function()
                     didDoubleJump = true
                     
                     local v = GetEntityVelocity(ped)
-                    -- Smoother double jump - preserve and boost existing velocity
-                    SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, 20.0)
+                    -- Check if falling (negative Z velocity) and adjust accordingly
+                    local verticalBoost = 20.0
+                    if v.z < -5.0 then
+                        -- Falling fast: bigger boost to counteract momentum
+                        verticalBoost = 25.0
+                    elseif v.z < 0.0 then
+                        -- Falling slowly: standard boost
+                        verticalBoost = 22.0
+                    end
+                    
+                    -- Preserve and boost horizontal velocity
+                    SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, verticalBoost)
                     
                     -- Disable ragdoll for 3 seconds (shorter for better control)
                     disableRagdollUntil = GetGameTimer() + 3000
