@@ -190,19 +190,19 @@ CreateThread(function()
                     local rollPed = PlayerPedId()
                     local startTime = GetGameTimer()
                     
-                    -- Apply velocity every frame but CUT the animation short (450ms instead of full 483ms)
-                    while GetGameTimer() - startTime < 450 do
+                    -- Apply velocity for a reasonable roll duration (700ms)
+                    while GetGameTimer() - startTime < 700 do
                         SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
                         Wait(0)
                     end
                     
-                    -- FORCE clear the animation before the end
+                    -- CUT the animation and restore control
                     ClearPedTasks(rollPed)
                     
                     -- Final velocity push and re-enable ragdoll
                     SetEntityVelocity(rollPed, capturedVel.x, capturedVel.y, 0.0)
                     SetPedCanRagdoll(rollPed, true)
-                    print('^2[Cyberware]^7 Animation complete - momentum maintained!')
+                    print('^2[Cyberware]^7 Roll complete - momentum maintained!')
                 end)
             end
         else
