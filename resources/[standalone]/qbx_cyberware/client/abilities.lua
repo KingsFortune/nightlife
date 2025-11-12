@@ -269,9 +269,6 @@ CreateThread(function()
             if IsControlJustPressed(0, 22) then -- SPACE
                 local currentTime = GetGameTimer()
                 
-                print(string.format('^3[Cyberware]^7 SPACE pressed - OnGround: %s, JumpCount: %d, IsJumpingNow: %s', 
-                    tostring(isOnGround), jumpCount, tostring(isJumpingNow)))
-                
                 if isOnGround and jumpCount == 0 then
                     -- First jump only when on ground and haven't jumped yet
                     jumpCount = 1
@@ -279,46 +276,38 @@ CreateThread(function()
                     isJumpingNow = true
                     didDoubleJump = false
                     
-                    print('^2[Cyberware]^7 Executing FIRST JUMP')
-                    
-                    -- Force the jump
+                    -- Force the jump with smoother velocity
                     TaskJump(ped, true)
                     
-                    -- Boost after slight delay
-                    SetTimeout(120, function()
+                    -- Smoother boost - less delay and more gradual
+                    SetTimeout(80, function()
                         local p = PlayerPedId()
                         local v = GetEntityVelocity(p)
-                        SetEntityVelocity(p, v.x, v.y, 10.0)
-                        print('^2[Cyberware]^7 First jump boost applied (10.0)')
-                        
-                        -- Clear isJumpingNow after 2 seconds to allow landing detection
-                        SetTimeout(2000, function()
-                            if isJumpingNow then
-                                print('^3[Cyberware]^7 Clearing isJumpingNow flag')
-                                isJumpingNow = false
-                            end
-                        end)
+                        -- Slightly higher first jump for better feel
+                        SetEntityVelocity(p, v.x, v.y, 12.0)
                     end)
                     
-                elseif jumpCount == 1 and (currentTime - lastJumpTime) > 400 and not isOnGround then
-                    -- Double jump only once, in air, with delay
+                    -- Clear isJumpingNow after shorter time
+                    SetTimeout(1500, function()
+                        if isJumpingNow then
+                            isJumpingNow = false
+                        end
+                    end)
+                    
+                elseif jumpCount == 1 and (currentTime - lastJumpTime) > 250 and not isOnGround then
+                    -- Double jump - reduced delay from 400ms to 250ms for snappier feel
                     jumpCount = 2
                     lastJumpTime = currentTime
                     didDoubleJump = true
                     
-                    print('^2[Cyberware]^7 Executing DOUBLE JUMP')
-                    
                     local v = GetEntityVelocity(ped)
-                    SetEntityVelocity(ped, v.x, v.y, 25.0)
+                    -- Smoother double jump - preserve some existing velocity
+                    SetEntityVelocity(ped, v.x * 1.2, v.y * 1.2, 20.0)
                     
-                    -- Disable ragdoll for 4 seconds after double jump
-                    disableRagdollUntil = GetGameTimer() + 4000
+                    -- Disable ragdoll for 3 seconds (shorter for better control)
+                    disableRagdollUntil = GetGameTimer() + 3000
                     
                     exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
-                    print('^2[Cyberware]^7 Double jump boost applied (25.0)')
-                else
-                    print(string.format('^1[Cyberware]^7 Jump conditions NOT met - JumpCount: %d, TimeSince: %dms, OnGround: %s',
-                        jumpCount, currentTime - lastJumpTime, tostring(isOnGround)))
                 end
             end
         else
