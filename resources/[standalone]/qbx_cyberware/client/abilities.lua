@@ -152,7 +152,7 @@ CreateThread(function()
                 
                 -- Preload animation NOW while still falling
                 local dict = 'move_strafe@roll'
-                local anim = 'combatroll_fwd_p2_00'
+                local anim = 'combatroll_fwd_p1_00'
                 
                 RequestAnimDict(dict)
                 while not HasAnimDictLoaded(dict) do
@@ -166,7 +166,7 @@ CreateThread(function()
                 print('^1[Cyberware]^7 ========== LANDING DETECTED - EXECUTING ROLL! ==========')
                 
                 local dict = 'move_strafe@roll'
-                local anim = 'combatroll_fwd_p2_00'
+                local anim = 'combatroll_fwd_p1_00'
                 
                 -- INSTANT interrupt and force roll
                 ClearPedTasksImmediately(ped)
