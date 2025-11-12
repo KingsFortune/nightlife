@@ -45,6 +45,19 @@ local function CountImplants(source)
     return count
 end
 
+-- Kiroshi callback: Get player data for scanning
+lib.callback.register('qbx_cyberware:server:getPlayerData', function(source, targetServerId)
+    local targetPlayer = exports.qbx_core:GetPlayer(targetServerId)
+    if not targetPlayer then return nil end
+    
+    local playerData = targetPlayer.PlayerData
+    return {
+        name = playerData.charinfo.firstname .. ' ' .. playerData.charinfo.lastname,
+        job = playerData.job.label or 'Civilian',
+        gang = playerData.gang.label or 'None'
+    }
+end)
+
 -- Install implant
 RegisterNetEvent('qbx_cyberware:server:installImplant', function(implantId)
     local src = source

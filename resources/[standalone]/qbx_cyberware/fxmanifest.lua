@@ -25,6 +25,7 @@ shared_scripts {
 client_scripts {
     '@qbx_core/modules/playerdata.lua',
     'client/main.lua',
+    'client/kiroshi.lua',
     'client/abilities.lua',
     'client/visuals.lua',
 }
@@ -36,4 +37,9 @@ server_scripts {
 
 files {
     'locales/*.json',
+    'nui/index.html',
+    'nui/style.css',
+    'nui/script.js',
 }
+
+ui_page 'nui/index.html'

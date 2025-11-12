@@ -1,0 +1,260 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', monospace;
+    overflow: hidden;
+}
+
+#kiroshi-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+#kiroshi-overlay.hidden {
+    display: none;
+}
+
+/* Scan lines effect */
+.scan-lines {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+        0deg,
+        rgba(255, 215, 0, 0.03) 0px,
+        rgba(255, 215, 0, 0.03) 1px,
+        transparent 1px,
+        transparent 2px
+    );
+    animation: scan 8s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes scan {
+    0% { transform: translateY(0); }
+    100% { transform: translateY(20px); }
+}
+
+/* Corner UI elements */
+.corner {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(255, 215, 0, 0.6);
+}
+
+.top-left {
+    top: 20px;
+    left: 20px;
+    border-right: none;
+    border-bottom: none;
+}
+
+.top-right {
+    top: 20px;
+    right: 20px;
+    border-left: none;
+    border-bottom: none;
+}
+
+.bottom-left {
+    bottom: 20px;
+    left: 20px;
+    border-right: none;
+    border-top: none;
+}
+
+.bottom-right {
+    bottom: 20px;
+    right: 20px;
+    border-left: none;
+    border-top: none;
+}
+
+/* Status indicator */
+.status-indicator {
+    position: absolute;
+    top: 30px;
+    right: 60px;
+    background: rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 215, 0, 0.6);
+    padding: 8px 12px;
+    min-width: 150px;
+}
+
+.status-text {
+    color: #FFD700;
+    font-size: 12px;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.status-bar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 215, 0, 0.2);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.status-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #FFD700, #FFA500);
+    animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.6; }
+    50% { opacity: 1; }
+}
+
+/* Entity markers */
+#entity-markers {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.entity-marker {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* Outline box */
+.entity-outline {
+    position: relative;
+    width: 8px;
+    height: 8px;
+    border: 2px solid;
+    transform: rotate(45deg);
+    animation: rotate 3s linear infinite;
+}
+
+.entity-outline.player {
+    border-color: #FFD700;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.6);
+}
+
+.entity-outline.npc {
+    border-color: #6496FF;
+    box-shadow: 0 0 10px rgba(100, 150, 255, 0.6);
+}
+
+@keyframes rotate {
+    from { transform: rotate(45deg); }
+    to { transform: rotate(405deg); }
+}
+
+/* Info panel */
+.entity-info {
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid;
+    padding: 8px 12px;
+    min-width: 180px;
+    backdrop-filter: blur(4px);
+}
+
+.entity-info.player {
+    border-color: rgba(255, 215, 0, 0.6);
+}
+
+.entity-info.npc {
+    border-color: rgba(100, 150, 255, 0.6);
+}
+
+.info-header {
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.info-header.player {
+    color: #FFD700;
+}
+
+.info-header.npc {
+    color: #6496FF;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    margin-bottom: 3px;
+    color: #CCCCCC;
+}
+
+.info-label {
+    color: #888;
+    text-transform: uppercase;
+    font-size: 9px;
+}
+
+.info-value {
+    color: #FFF;
+    font-weight: bold;
+}
+
+/* Health bar */
+.health-bar {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 0, 0, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 5px;
+    border: 1px solid rgba(255, 0, 0, 0.4);
+}
+
+.health-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #ff0000, #00ff00);
+    transition: width 0.3s ease;
+}
+
+/* Distance indicator */
+.distance-indicator {
+    position: absolute;
+    top: -18px;
+    right: 0;
+    background: rgba(0, 0, 0, 0.7);
+    padding: 2px 6px;
+    border-radius: 2px;
+    font-size: 9px;
+    color: #FFD700;
+    border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+/* Glitch effect for data values */
+.glitch {
+    animation: glitch 0.3s ease-in-out;
+}
+
+@keyframes glitch {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}
