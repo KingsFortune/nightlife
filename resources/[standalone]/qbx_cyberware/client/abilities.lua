@@ -260,7 +260,8 @@ CreateThread(function()
             lastGroundState = isOnGround
             
             -- Air control ONLY when actually in air AND moving significantly (not running on ground)
-            if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 then
+            -- AND not ragdolling
+            if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 and not IsPedRagdoll(ped) then
                 local vel = GetEntityVelocity(ped)
                 local heading = GetEntityHeading(ped)
                 local radians = math.rad(heading)
@@ -332,21 +333,21 @@ CreateThread(function()
                     didDoubleJump = true
                     
                     local v = GetEntityVelocity(ped)
-                    -- Check if falling (negative Z velocity) and adjust accordingly
-                    local verticalBoost = 20.0
-                    if v.z < -5.0 then
-                        -- Falling fast: bigger boost to counteract momentum
-                        verticalBoost = 25.0
-                    elseif v.z < 0.0 then
-                        -- Falling slowly: standard boost
-                        verticalBoost = 22.0
+                    -- MUCH stronger boost when falling to overcome downward momentum
+                    local verticalBoost = 30.0
+                    if v.z < -10.0 then
+                        -- Falling very fast from high building: massive boost
+                        verticalBoost = 40.0
+                    elseif v.z < -5.0 then
+                        -- Falling moderately fast: strong boost
+                        verticalBoost = 35.0
                     end
                     
                     -- Preserve and boost horizontal velocity
                     SetEntityVelocity(ped, v.x * 1.3, v.y * 1.3, verticalBoost)
                     
-                    -- Disable ragdoll for 3 seconds (shorter for better control)
-                    disableRagdollUntil = GetGameTimer() + 3000
+                    -- Disable ragdoll for longer when falling from height
+                    disableRagdollUntil = GetGameTimer() + 5000
                     
                     exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
                 end
