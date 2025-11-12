@@ -52,107 +52,101 @@ local function KiroshiScan()
     
     local myCoords = GetEntityCoords(cache.ped)
     local scanRange = implant.effects.scan_range
-    local scannedCount = 0
+    local scannedInfo = {}
+    local playerCount = 0
+    local npcCount = 0
     
-    -- Scan all players in range
+    -- Scan all players in range (limit to prevent spam)
     local players = GetActivePlayers()
     for _, player in ipairs(players) do
-        if player ~= PlayerId() then
+        if player ~= PlayerId() and playerCount < 5 then -- Max 5 players
             local targetPed = GetPlayerPed(player)
-            local targetCoords = GetEntityCoords(targetPed)
-            local distance = #(myCoords - targetCoords)
-            
-            if distance <= scanRange then
-                scannedCount = scannedCount + 1
-                local targetId = GetPlayerServerId(player)
-                local targetHealth = GetEntityHealth(targetPed)
-                local targetMaxHealth = GetEntityMaxHealth(targetPed)
-                local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
+            if DoesEntityExist(targetPed) then
+                local targetCoords = GetEntityCoords(targetPed)
+                local distance = #(myCoords - targetCoords)
                 
-                -- Highlight player
-                SetEntityDrawOutline(targetPed, true)
-                SetEntityDrawOutlineColor(255, 215, 0, 255) -- Gold outline
-                activeScans[targetPed] = GetGameTimer() + 5000 -- 5 seconds
-                
-                -- Request target data from server
-                lib.callback('qbx_cyberware:server:scanTarget', false, function(targetData)
-                    if targetData then
-                        local scanText = string.format(
-                            '🎯 **Player: %s %s**\n' ..
-                            'Health: %d%% | Job: %s | %.1fm away',
-                            targetData.firstname or 'Unknown',
-                            targetData.lastname or 'Unknown',
-                            healthPercent,
-                            targetData.job or 'Unemployed',
-                            distance
-                        )
-                        
-                        exports.qbx_core:Notify(scanText, 'inform', 5000)
+                if distance <= scanRange then
+                    playerCount = playerCount + 1
+                    local targetHealth = GetEntityHealth(targetPed)
+                    local targetMaxHealth = GetEntityMaxHealth(targetPed)
+                    local healthPercent = math.floor((targetHealth / targetMaxHealth) * 100)
+                    
+                    -- Highlight player safely
+                    if NetworkGetEntityIsNetworked(targetPed) then
+                        SetEntityDrawOutline(targetPed, true)
+                        SetEntityDrawOutlineColor(255, 215, 0, 255) -- Gold
+                        activeScans[targetPed] = GetGameTimer() + 5000
                     end
-                end, targetId)
+                    
+                    table.insert(scannedInfo, string.format('👤 Player | HP:%d%% | %.1fm', healthPercent, distance))
+                end
             end
         end
     end
     
-    -- Scan all NPCs in range
+    -- Scan NPCs in range (limit to prevent crash)
     local peds = GetGamePool('CPed')
     for _, ped in ipairs(peds) do
-        if ped ~= cache.ped and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
+        if npcCount >= 10 then break end -- Max 10 NPCs
+        
+        if ped ~= cache.ped and DoesEntityExist(ped) and not IsPedAPlayer(ped) and not IsPedDeadOrDying(ped, true) then
             local pedCoords = GetEntityCoords(ped)
             local distance = #(myCoords - pedCoords)
             
             if distance <= scanRange then
-                scannedCount = scannedCount + 1
+                npcCount = npcCount + 1
                 local pedHealth = GetEntityHealth(ped)
                 local pedMaxHealth = GetEntityMaxHealth(ped)
                 local healthPercent = math.floor((pedHealth / pedMaxHealth) * 100)
                 
-                -- Highlight NPC
+                -- Highlight NPC safely (no network check needed for local peds)
                 SetEntityDrawOutline(ped, true)
-                SetEntityDrawOutlineColor(100, 150, 255, 255) -- Blue outline for NPCs
-                activeScans[ped] = GetGameTimer() + 5000 -- 5 seconds
+                SetEntityDrawOutlineColor(100, 150, 255, 255) -- Blue
+                activeScans[ped] = GetGameTimer() + 5000
                 
-                -- Get ped type - simplified since no NPC cops
-                local pedType = 'Civilian'
-                if IsPedInAnyVehicle(ped, false) then
-                    pedType = 'Civilian (in Vehicle)'
-                end
-                
-                local scanText = string.format(
-                    '🎯 **NPC: %s**\n' ..
-                    'Health: %d%% | %.1fm away',
-                    pedType,
-                    healthPercent,
-                    distance
-                )
-                
-                exports.qbx_core:Notify(scanText, 'inform', 3000)
+                table.insert(scannedInfo, string.format('🚶 NPC | HP:%d%% | %.1fm', healthPercent, distance))
             end
         end
     end
     
-    if scannedCount == 0 then
+    local totalScanned = playerCount + npcCount
+    
+    if totalScanned == 0 then
         exports.qbx_core:Notify('No targets in range', 'error')
         return
     end
     
-    exports.qbx_core:Notify(string.format('📡 Scanned %d targets', scannedCount), 'success', 2000)
+    -- Single consolidated notification
+    local notifyText = string.format('📡 Scanned: %d Players, %d NPCs\n%s', 
+        playerCount, 
+        npcCount,
+        table.concat(scannedInfo, '\n')
+    )
+    
+    exports.qbx_core:Notify(notifyText, 'inform', 7000)
     SetCooldown('kiroshi_optics', implant.cooldown)
 end
 
 -- Thread to manage scan highlights
 CreateThread(function()
     while true do
-        Wait(100)
+        Wait(500) -- Slower update rate
         
         local currentTime = GetGameTimer()
+        local toRemove = {}
+        
         for entity, endTime in pairs(activeScans) do
             if currentTime >= endTime then
                 if DoesEntityExist(entity) then
                     SetEntityDrawOutline(entity, false)
                 end
-                activeScans[entity] = nil
+                table.insert(toRemove, entity)
             end
+        end
+        
+        -- Clean up
+        for _, entity in ipairs(toRemove) do
+            activeScans[entity] = nil
         end
     end
 end)
