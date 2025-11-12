@@ -163,30 +163,49 @@ CreateThread(function()
             
             -- Execute roll the INSTANT we're no longer falling (landing moment)
             if rollPending and not isFalling then
-                print('^1[Cyberware]^7 ========== LANDING DETECTED - EXECUTING ROLL! ==========')
-                
-                -- Clear flags IMMEDIATELY to prevent re-triggering
                 didDoubleJump = false
                 rollPending = false
                 
                 local dict = 'move_fall@beastjump'
                 local anim = 'high_land_run'
                 
-                -- INSTANT interrupt and force roll
-                ClearPedTasksImmediately(ped)
-                SetPedCanRagdoll(ped, false)
+                -- Capture velocity for momentum preservation
+                local capturedVel = GetEntityVelocity(ped)
+                local velX, velY = capturedVel.x, capturedVel.y
                 
-                -- Play high land run animation
-                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
-                print('^2[Cyberware]^7 High land run animation playing!')
+                SetPedCanRagdoll(ped, false)
+                TaskPlayAnim(ped, dict, anim, 8.0, -4.0, -1, 0, 0, false, false, false)
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Re-enable ragdoll after animation
+                -- Momentum preservation + early cancel
                 CreateThread(function()
+                    local rollPed = PlayerPedId()
+                    local startTime = GetGameTimer()
+                    local rollDuration = 350
+                    local cancelled = false
+                    
+                    -- Apply velocity during roll
+                    while GetGameTimer() - startTime < rollDuration and not cancelled do
+                        SetEntityVelocity(rollPed, velX, velY, 0.0)
+                        
+                        -- Early cancel on movement or aim
+                        if IsControlPressed(0, 32) or IsControlPressed(0, 33) or IsControlPressed(0, 34) or IsControlPressed(0, 35) or IsControlPressed(0, 25) then
+                            StopAnimTask(rollPed, dict, anim, 1.0)
+                            cancelled = true
+                            break
+                        end
+                        Wait(0)
+                    end
+                    
+                    -- Re-enable ragdoll
+                    SetPedCanRagdoll(rollPed, true)
+                    
+                    -- Sprint boost for smooth transition
+                    local player = PlayerId()
+                    SetRunSprintMultiplierForPlayer(player, 1.12)
                     Wait(500)
-                    SetPedCanRagdoll(PlayerPedId(), true)
-                    print('^2[Cyberware]^7 Animation complete!')
+                    SetRunSprintMultiplierForPlayer(player, 1.0)
                 end)
             end
         else
