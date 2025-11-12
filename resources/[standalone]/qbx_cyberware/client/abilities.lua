@@ -181,15 +181,15 @@ CreateThread(function()
                 TaskPlayAnim(ped, dict, animStart, 8.0, -8.0, -1, 0, 0, false, false, false)
                 print('^2[Cyberware]^7 Roll start animation playing!')
                 
-                -- Wait for first animation to finish (~300ms), then play recovery
-                Wait(350)
+                exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
+                
+                -- Wait for first animation to finish, then play recovery
+                Wait(300)
                 TaskPlayAnim(ped, dict, animEnd, 8.0, -8.0, -1, 0, 0, false, false, false)
                 print('^2[Cyberware]^7 Roll recovery animation playing!')
                 
-                exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
-                
-                -- Re-enable ragdoll after full roll completes
-                Wait(350)
+                -- Re-enable ragdoll and movement earlier for fluid transition
+                Wait(250)
                 SetPedCanRagdoll(ped, true)
                 
                 print('^2[Cyberware]^7 Roll complete')
