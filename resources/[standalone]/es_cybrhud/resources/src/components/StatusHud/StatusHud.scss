@@ -1,0 +1,27 @@
+.StatusHud {
+    position: absolute;
+    height: 15rem;
+    width: 19rem;
+    left: 0;
+    bottom: 0;
+    // background-color: rgba(102, 51, 153, 0.13);
+    .StatusHudSVG {
+        position: absolute;
+        bottom: .5rem;
+        left: .55rem;
+        transition: .57s all linear;
+    }
+    .StatusSVG {
+        position: absolute;
+        left: 2.1rem;
+        bottom: 1.1rem;
+    }
+    .Icon {
+        position: absolute;
+        margin: auto auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: -.25rem;
+    }
+}

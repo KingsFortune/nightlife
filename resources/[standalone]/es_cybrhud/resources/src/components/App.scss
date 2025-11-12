@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Tomorrow:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+
+body {
+  user-select: none;
+  overflow: hidden;
+  // color: #2effffc7;
+  // background-color: black;
+}
+html {
+  font-size: 16px;
+}
+
+
+* {
+  transition: .42s all linear;
+}
+
+.Main {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  .Test {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+
+    // background-image: url('../Assets');
+    background-position: center center;
+    background-size: contain;
+    background-repeat: no-repeat;
+    pointer-events: none;
+    opacity: .5;
+    z-index: 1;
+  }
+}
+
+@media screen and (width: 2560px) and (height: 1440px) {
+  html { font-size: 21.2px; }
+}
