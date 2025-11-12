@@ -31,6 +31,16 @@ RegisterNetEvent('qbx_cyberware:client:resetCooldowns', function()
     cooldowns = {}
 end)
 
+-- Handle kiroshi reset (for testing)
+RegisterNetEvent('qbx_cyberware:client:resetKiroshi', function()
+    if kiroshiActive then
+        DeactivateKiroshiScan()
+    end
+    cooldowns = {}
+    scannedEntities = {}
+    print('^2[KIROSHI]^7 Reset complete')
+end)
+
 -- Activate Kiroshi Scan
 function ActivateKiroshiScan()
     if not HasImplant('kiroshi_optics') then return end

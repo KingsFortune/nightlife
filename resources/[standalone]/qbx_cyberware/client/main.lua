@@ -128,6 +128,39 @@ CreateThread(function()
     end
 end)
 
+-- Reset command for testing (reloads abilities without relog)
+RegisterCommand('resetcyberware', function()
+    print('^3[qbx_cyberware]^7 Resetting cyberware abilities...')
+    
+    -- Trigger cooldown reset event
+    TriggerEvent('qbx_cyberware:client:resetCooldowns')
+    
+    -- Trigger kiroshi reset
+    TriggerEvent('qbx_cyberware:client:resetKiroshi')
+    
+    -- Clear any active timecycle modifiers
+    ClearTimecycleModifier()
+    
+    -- Reset player movement speeds
+    local player = PlayerId()
+    SetRunSprintMultiplierForPlayer(player, 1.0)
+    SetSwimMultiplierForPlayer(player, 1.0)
+    SetPedMoveRateOverride(PlayerPedId(), 1.0)
+    
+    -- Resync cyberware from server
+    playerCyberware = lib.callback.await('qbx_cyberware:server:getCyberware', false) or {}
+    
+    -- Reapply visuals
+    for implantId, data in pairs(playerCyberware) do
+        if data.installed then
+            TriggerEvent('qbx_cyberware:client:applyVisuals', implantId)
+        end
+    end
+    
+    exports.qbx_core:Notify('🔄 Cyberware abilities reset successfully', 'success')
+    print('^2[qbx_cyberware]^7 Reset complete!')
+end, false)
+
 -- Exports
 exports('HasImplant', HasImplant)
 exports('GetCyberware', GetCyberware)

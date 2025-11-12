@@ -33,7 +33,17 @@ end
 RegisterNetEvent('qbx_cyberware:client:resetCooldowns', function()
     cooldowns = {}
     activeEffects = {}
-    exports.qbx_core:Notify('🔄 All cooldowns have been reset', 'success')
+    
+    -- Clear any active visual effects
+    ClearTimecycleModifier()
+    
+    -- Reset player movement speeds
+    local player = PlayerId()
+    SetRunSprintMultiplierForPlayer(player, 1.0)
+    SetSwimMultiplierForPlayer(player, 1.0)
+    SetPedMoveRateOverride(PlayerPedId(), 1.0)
+    
+    print('^2[CYBERWARE]^7 All abilities reset')
 end)
 
 -- KIROSHI OPTICS: Now handled by kiroshi.lua with NUI overlay
