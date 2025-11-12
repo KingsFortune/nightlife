@@ -129,6 +129,26 @@ body {
     box-shadow: 0 0 15px rgba(46, 255, 255, 0.3);
 }
 
+/* Vehicle info uses cyan theme */
+#vehicle-info {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.85);
+    border: 1px solid #2EFFFF;
+    border-left: 3px solid #2EFFFF;
+    padding: 8px 12px;
+    min-width: 200px;
+    box-shadow: 0 0 15px rgba(46, 255, 255, 0.3);
+    transition: all 0.15s ease;
+}
+
+#vehicle-info.hidden {
+    display: none;
+}
+
+.vehicle-header {
+    color: #2EFFFF !important;
+}
+
 #target-info.npc .info-header,
 #target-info.npc .info-label {
     color: #2EFFFF;

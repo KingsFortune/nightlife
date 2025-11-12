@@ -182,10 +182,10 @@ CreateThread(function()
             local camForward = RotationToDirection(camRot)
             local rayEnd = camCoords + (camForward * scanRange)
             
-            local ray = StartShapeTestRay(camCoords.x, camCoords.y, camCoords.z, rayEnd.x, rayEnd.y, rayEnd.z, 12, myPed, 0)
+            local ray = StartShapeTestRay(camCoords.x, camCoords.y, camCoords.z, rayEnd.x, rayEnd.y, rayEnd.z, 10, myPed, 0)
             local _, hit, _, _, entityHit = GetShapeTestResult(ray)
             
-            -- Check if we hit an entity (ped)
+            -- Check if we hit a ped
             if hit and entityHit and DoesEntityExist(entityHit) and IsEntityAPed(entityHit) and entityHit ~= myPed then
                 local distance = #(myCoords - GetEntityCoords(entityHit))
                 
@@ -260,6 +260,69 @@ CreateThread(function()
                                 }
                             })
                         end
+                    end
+                else
+                    -- Out of range
+                    targetedEntity = nil
+                    SendNUIMessage({
+                        action = 'clearTarget'
+                    })
+                end
+            -- Check if we hit a vehicle
+            elseif hit and entityHit and DoesEntityExist(entityHit) and IsEntityAVehicle(entityHit) then
+                local distance = #(myCoords - GetEntityCoords(entityHit))
+                
+                if distance <= scanRange then
+                    targetedEntity = entityHit
+                    
+                    -- Get vehicle data
+                    local vehicleModel = GetEntityModel(entityHit)
+                    local displayName = GetDisplayNameFromVehicleModel(vehicleModel)
+                    local makeName = GetMakeNameFromVehicleModel(vehicleModel)
+                    local vehClass = GetVehicleClass(entityHit)
+                    
+                    -- Get vehicle class name
+                    local classNames = {
+                        [0] = "Compact", [1] = "Sedan", [2] = "SUV", [3] = "Coupe",
+                        [4] = "Muscle", [5] = "Sports Classic", [6] = "Sports", [7] = "Super",
+                        [8] = "Motorcycle", [9] = "Off-Road", [10] = "Industrial", [11] = "Utility",
+                        [12] = "Van", [13] = "Cycle", [14] = "Boat", [15] = "Helicopter",
+                        [16] = "Plane", [17] = "Service", [18] = "Emergency", [19] = "Military",
+                        [20] = "Commercial", [21] = "Train"
+                    }
+                    
+                    -- Calculate box dimensions for vehicle
+                    local minDim, maxDim = GetModelDimensions(vehicleModel)
+                    local entityCoords = GetEntityCoords(entityHit)
+                    
+                    local frontTop = GetOffsetFromEntityInWorldCoords(entityHit, maxDim.x, maxDim.y, maxDim.z)
+                    local rearBottom = GetOffsetFromEntityInWorldCoords(entityHit, minDim.x, minDim.y, minDim.z)
+                    
+                    local onScreenFront, frontX, frontY = GetScreenCoordFromWorldCoord(frontTop.x, frontTop.y, frontTop.z)
+                    local onScreenRear, rearX, rearY = GetScreenCoordFromWorldCoord(rearBottom.x, rearBottom.y, rearBottom.z)
+                    
+                    if onScreenFront and onScreenRear then
+                        local resX, resY = GetActiveScreenResolution()
+                        
+                        local boxWidth = math.abs(math.floor(frontX * resX) - math.floor(rearX * resX))
+                        local boxHeight = math.abs(math.floor(frontY * resY) - math.floor(rearY * resY))
+                        local boxX = math.min(math.floor(frontX * resX), math.floor(rearX * resX))
+                        local boxY = math.min(math.floor(frontY * resY), math.floor(rearY * resY))
+                        
+                        SendNUIMessage({
+                            action = 'updateVehicle',
+                            target = {
+                                isVehicle = true,
+                                model = GetLabelText(displayName),
+                                make = GetLabelText(makeName),
+                                class = classNames[vehClass] or "Unknown",
+                                distance = string.format("%.1f", distance),
+                                boxX = boxX,
+                                boxY = boxY,
+                                boxWidth = boxWidth,
+                                boxHeight = boxHeight
+                            }
+                        })
                     end
                 else
                     -- Out of range
