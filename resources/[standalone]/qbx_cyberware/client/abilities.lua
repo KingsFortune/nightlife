@@ -158,97 +158,94 @@ end
 -- REINFORCED TENDONS: Enhanced Jump & Double Jump
 local jumpCount = 0
 local lastJumpTime = 0
-local pendingJumpBoost = false
-local jumpBoostType = nil
 
 CreateThread(function()
     while true do
         Wait(0)
         
         if HasImplant('reinforced_tendons') then
-            local ped = cache.ped
+            local ped = PlayerPedId()
             local implant = config.Implants.reinforced_tendons
             
             -- Prevent ragdoll on landing
             SetPedCanRagdoll(ped, false)
-            
-            -- Reduce fall damage
             SetPedConfigFlag(ped, 104, true)
             
-            -- Enable air control while in air
-            if IsPedFalling(ped) or IsPedJumping(ped) then
-                -- Allow movement controls in air
+            -- Air control
+            if IsPedFalling(ped) then
                 local vel = GetEntityVelocity(ped)
-                local forward = GetEntityForwardVector(ped)
-                local right = vector3(-forward.y, forward.x, 0.0)
+                local heading = GetEntityHeading(ped)
+                local radians = math.rad(heading)
                 
-                local moveX = 0.0
-                local moveY = 0.0
+                local moveSpeed = 0.2
+                local newVelX = vel.x
+                local newVelY = vel.y
                 
-                -- WASD controls in air
-                if IsControlPressed(0, 32) then moveY = moveY + 0.15 end -- W
-                if IsControlPressed(0, 33) then moveY = moveY - 0.15 end -- S
-                if IsControlPressed(0, 34) then moveX = moveX - 0.15 end -- A
-                if IsControlPressed(0, 35) then moveX = moveX + 0.15 end -- D
+                if IsControlPressed(0, 32) then -- W
+                    newVelX = newVelX + (-math.sin(radians) * moveSpeed)
+                    newVelY = newVelY + (math.cos(radians) * moveSpeed)
+                end
+                if IsControlPressed(0, 33) then -- S
+                    newVelX = newVelX - (-math.sin(radians) * moveSpeed)
+                    newVelY = newVelY - (math.cos(radians) * moveSpeed)
+                end
+                if IsControlPressed(0, 34) then -- A
+                    newVelX = newVelX + (math.cos(radians) * moveSpeed)
+                    newVelY = newVelY + (math.sin(radians) * moveSpeed)
+                end
+                if IsControlPressed(0, 35) then -- D
+                    newVelX = newVelX - (math.cos(radians) * moveSpeed)
+                    newVelY = newVelY - (math.sin(radians) * moveSpeed)
+                end
                 
-                -- Apply air movement
-                if moveX ~= 0.0 or moveY ~= 0.0 then
-                    local newVel = vector3(
-                        vel.x + (forward.x * moveY) + (right.x * moveX),
-                        vel.y + (forward.y * moveY) + (right.y * moveX),
-                        vel.z
-                    )
-                    SetEntityVelocity(ped, newVel.x, newVel.y, newVel.z)
+                if newVelX ~= vel.x or newVelY ~= vel.y then
+                    SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                 end
             end
             
-            -- Apply pending jump boost (delayed from jump detection)
-            if pendingJumpBoost then
-                pendingJumpBoost = false
-                local vel = GetEntityVelocity(ped)
-                if jumpBoostType == 'first' then
-                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_first * 3.0)
-                elseif jumpBoostType == 'double' then
-                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_height_double * 3.5)
-                    exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
-                end
-            end
-            
-            -- Check if player is on ground
-            local coords = GetEntityCoords(ped)
-            local ray = StartShapeTestRay(coords.x, coords.y, coords.z, coords.x, coords.y, coords.z - 2.0, 1, ped, 0)
-            local _, hit, _, _, _ = GetShapeTestResult(ray)
-            local isOnGround = hit == 1
+            -- Simple ground check
+            local isOnGround = IsPedOnFoot(ped) and not IsPedFalling(ped) and not IsPedJumping(ped) and not IsPedRagdoll(ped)
             
             -- Reset jump count when on ground
             if isOnGround then
                 jumpCount = 0
             end
             
-            -- Detect jump press
-            if IsControlJustPressed(0, 22) then -- SPACE key
+            -- Jump detection
+            if IsControlJustPressed(0, 22) then -- SPACE
                 local currentTime = GetGameTimer()
-                local timeSinceLastJump = currentTime - lastJumpTime
                 
                 -- First jump (on ground)
-                if isOnGround and timeSinceLastJump > 500 then
+                if isOnGround then
                     jumpCount = 1
                     lastJumpTime = currentTime
-                    pendingJumpBoost = true
-                    jumpBoostType = 'first'
                     
-                -- Double jump (in air, after first jump, with delay)
-                elseif not isOnGround and jumpCount == 1 and timeSinceLastJump > 300 then
+                    -- Let normal jump happen, then boost
+                    CreateThread(function()
+                        Wait(100)
+                        local p = PlayerPedId()
+                        local v = GetEntityVelocity(p)
+                        SetEntityVelocity(p, v.x, v.y, v.z + (implant.effects.jump_height_first * 2.0))
+                    end)
+                    
+                -- Double jump (in air)
+                elseif jumpCount == 1 and (currentTime - lastJumpTime) > 300 then
                     jumpCount = 2
                     lastJumpTime = currentTime
-                    pendingJumpBoost = true
-                    jumpBoostType = 'double'
+                    
+                    CreateThread(function()
+                        Wait(50)
+                        local p = PlayerPedId()
+                        local v = GetEntityVelocity(p)
+                        SetEntityVelocity(p, v.x, v.y, implant.effects.jump_height_double * 3.0)
+                        exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
+                    end)
                 end
             end
         else
-            -- Reset to normal if no implant
-            local ped = cache.ped
-            if ped and DoesEntityExist(ped) then
+            -- Reset if no implant
+            local ped = PlayerPedId()
+            if DoesEntityExist(ped) then
                 SetPedCanRagdoll(ped, true)
                 SetPedConfigFlag(ped, 104, false)
             end
