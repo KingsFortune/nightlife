@@ -94,14 +94,32 @@ CreateThread(function()
         Wait(0)
         
         if QBX.PlayerData and QBX.PlayerData.citizenid then
-            -- Subdermal Armor: Damage reduction (handled server-side via damage events)
-            -- This is just a placeholder for client-side awareness
-            
-            -- Reinforced Tendons: Enhanced jumping
+            -- Reinforced Tendons: Reduce fall damage
             if HasImplant('reinforced_tendons') then
                 local implant = config.Implants.reinforced_tendons
-                if implant.effects.can_double_jump then
-                    -- Double jump handled in separate thread
+                local ped = cache.ped
+                
+                -- Apply fall damage reduction
+                if implant.effects.fall_damage_reduction then
+                    local fallDamageMultiplier = 1.0 - implant.effects.fall_damage_reduction
+                    SetPedSuffersCriticalHits(ped, false) -- Prevents instant death from high falls
+                    
+                    -- Monitor health for fall damage and restore based on reduction
+                    if IsPedFalling(ped) then
+                        local healthBefore = GetEntityHealth(ped)
+                        Wait(100)
+                        local healthAfter = GetEntityHealth(ped)
+                        
+                        if healthAfter < healthBefore then
+                            local damage = healthBefore - healthAfter
+                            local reducedDamage = damage * fallDamageMultiplier
+                            local healthToRestore = damage - reducedDamage
+                            
+                            if healthToRestore > 0 then
+                                SetEntityHealth(ped, healthAfter + healthToRestore)
+                            end
+                        end
+                    end
                 end
             end
         else

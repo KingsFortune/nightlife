@@ -29,6 +29,13 @@ local function HasImplant(implantId)
     return exports.qbx_cyberware:HasImplant(implantId)
 end
 
+-- Reset all cooldowns (admin command)
+RegisterNetEvent('qbx_cyberware:client:resetCooldowns', function()
+    cooldowns = {}
+    activeEffects = {}
+    exports.qbx_core:Notify('🔄 All cooldowns have been reset', 'success')
+end)
+
 -- KIROSHI OPTICS: Scan nearby player
 local function KiroshiScan()
     if not HasImplant('kiroshi_optics') then return end
@@ -136,6 +143,16 @@ CreateThread(function()
             local ped = cache.ped
             local implant = config.Implants.reinforced_tendons
             
+            -- Prevent ragdoll on landing
+            if implant.effects.no_ragdoll_on_land then
+                SetPedCanRagdoll(ped, false)
+            end
+            
+            -- Reduce fall damage
+            if implant.effects.fall_damage_reduction then
+                SetPedConfigFlag(ped, 104, true) -- CPED_CONFIG_FLAG_NoFallDamageRagdoll
+            end
+            
             -- Check if ped is in air using velocity and falling state
             local velocity = GetEntityVelocity(ped)
             local isFalling = IsPedFalling(ped)
@@ -157,7 +174,7 @@ CreateThread(function()
                 -- Enhanced first jump - boost upward velocity
                 SetTimeout(100, function()
                     local vel = GetEntityVelocity(ped)
-                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_multiplier * 3.0)
+                    SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_multiplier * 3.5)
                 end)
             end
             
@@ -167,7 +184,7 @@ CreateThread(function()
                 
                 -- Apply double jump boost
                 local vel = GetEntityVelocity(ped)
-                SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_multiplier * 4.0)
+                SetEntityVelocity(ped, vel.x, vel.y, implant.effects.jump_multiplier * 5.0)
                 
                 -- Visual feedback
                 exports.qbx_core:Notify('⬆️ DOUBLE JUMP', 'inform', 1000)
@@ -175,6 +192,12 @@ CreateThread(function()
                 lastJumpTime = GetGameTimer()
             end
         else
+            -- Reset to normal if no implant
+            local ped = cache.ped
+            if ped then
+                SetPedCanRagdoll(ped, true)
+                SetPedConfigFlag(ped, 104, false)
+            end
             Wait(500)
         end
     end

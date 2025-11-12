@@ -204,4 +204,158 @@ RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function()
     TriggerClientEvent('qbx_cyberware:client:syncCyberware', src, cyberware)
 end)
 
+-- COMMANDS
+
+-- List installed cyberware
+lib.addCommand('listcyberware', {
+    help = 'List your installed cyberware implants',
+}, function(source)
+    local cyberware = GetPlayerCyberware(source)
+    local count = CountImplants(source)
+    
+    if count == 0 then
+        exports.qbx_core:Notify(source, 'You have no implants installed', 'inform')
+        return
+    end
+    
+    local message = string.format('**Installed Implants (%d/%d):**\n', count, config.MaxImplants)
+    for implantId, data in pairs(cyberware) do
+        if data.installed then
+            local implant = config.Implants[implantId]
+            if implant then
+                message = message .. string.format('• %s (%s)\n', implant.label, implantId)
+            end
+        end
+    end
+    
+    exports.qbx_core:Notify(source, message, 'inform', 7000)
+end)
+
+-- Remove cyberware (improved with list selection)
+lib.addCommand('removecyberware', {
+    help = 'Remove an installed cyberware implant',
+    params = {{
+        name = 'implant',
+        type = 'string',
+        help = 'Implant name: subdermal, tendons, kiroshi, or adrenaline (or use /listcyberware first)',
+        optional = true,
+    }},
+}, function(source, args)
+    local cyberware = GetPlayerCyberware(source)
+    local count = CountImplants(source)
+    
+    if count == 0 then
+        exports.qbx_core:Notify(source, 'You have no implants to remove', 'error')
+        return
+    end
+    
+    -- If no argument provided, show list
+    if not args.implant then
+        local message = '**Select implant to remove:**\n'
+        message = message .. 'Use: /removecyberware [name]\n\n'
+        for implantId, data in pairs(cyberware) do
+            if data.installed then
+                local implant = config.Implants[implantId]
+                if implant then
+                    local shortName = implantId:gsub('_', '')
+                    message = message .. string.format('• %s - use: %s\n', implant.label, shortName)
+                end
+            end
+        end
+        exports.qbx_core:Notify(source, message, 'inform', 10000)
+        return
+    end
+    
+    -- Find matching implant (fuzzy match)
+    local targetImplantId = nil
+    local searchTerm = args.implant:lower()
+    
+    -- Try direct match first
+    for implantId, data in pairs(cyberware) do
+        if data.installed then
+            local shortName = implantId:gsub('_', ''):lower()
+            if shortName == searchTerm or implantId:lower() == searchTerm then
+                targetImplantId = implantId
+                break
+            end
+        end
+    end
+    
+    -- Try partial match
+    if not targetImplantId then
+        for implantId, data in pairs(cyberware) do
+            if data.installed then
+                if implantId:lower():find(searchTerm) then
+                    targetImplantId = implantId
+                    break
+                end
+            end
+        end
+    end
+    
+    if not targetImplantId then
+        exports.qbx_core:Notify(source, 'Implant not found. Use /removecyberware to see list', 'error')
+        return
+    end
+    
+    TriggerEvent('qbx_cyberware:server:removeImplant', targetImplantId)
+end)
+
+-- Admin: Reset cyberware cooldowns
+lib.addCommand('resetcooldowns', {
+    help = 'Reset all cyberware ability cooldowns (Admin/Testing)',
+    restricted = 'group.admin',
+}, function(source)
+    TriggerClientEvent('qbx_cyberware:client:resetCooldowns', source)
+    exports.qbx_core:Notify(source, '✅ All cyberware cooldowns reset', 'success')
+end)
+
+-- Admin: Give cyberware implant
+lib.addCommand('givecyberware', {
+    help = 'Give a cyberware implant to a player (Admin)',
+    restricted = 'group.admin',
+    params = {
+        {
+            name = 'id',
+            type = 'playerId',
+            help = 'Player ID',
+        },
+        {
+            name = 'implant',
+            type = 'string',
+            help = 'subdermal, tendons, kiroshi, or adrenaline',
+        },
+    },
+}, function(source, args)
+    local player = exports.qbx_core:GetPlayer(args.id)
+    if not player then
+        exports.qbx_core:Notify(source, 'Player not found', 'error')
+        return
+    end
+    
+    -- Find implant
+    local searchTerm = args.implant:lower()
+    local targetImplantId = nil
+    local targetImplant = nil
+    
+    for implantId, implant in pairs(config.Implants) do
+        local shortName = implantId:gsub('_', ''):lower()
+        if shortName == searchTerm or implantId:lower() == searchTerm or implantId:lower():find(searchTerm) then
+            targetImplantId = implantId
+            targetImplant = implant
+            break
+        end
+    end
+    
+    if not targetImplant then
+        exports.qbx_core:Notify(source, 'Invalid implant name', 'error')
+        return
+    end
+    
+    -- Give the item
+    player.Functions.AddItem(targetImplant.item, 1)
+    exports.qbx_core:Notify(source, string.format('Gave %s to %s', targetImplant.label, player.PlayerData.charinfo.firstname), 'success')
+    exports.qbx_core:Notify(args.id, string.format('Admin gave you: %s', targetImplant.label), 'inform')
+end)
+
 print('^2[qbx_cyberware]^7 Server initialized with '..implantCount..' implants')
