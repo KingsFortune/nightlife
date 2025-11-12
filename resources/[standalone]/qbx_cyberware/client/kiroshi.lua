@@ -205,53 +205,63 @@ CreateThread(function()
                     -- Set color based on type (gold for players, blue for NPCs)
                     local r, g, b, a
                     if entity.isPlayer then
-                        r, g, b, a = 255, 215, 0, 150  -- Gold
+                        r, g, b, a = 255, 215, 0, 200  -- Gold
                     else
-                        r, g, b, a = 100, 150, 255, 150  -- Blue
+                        r, g, b, a = 100, 150, 255, 200  -- Blue
                     end
                     
-                    -- Draw outline using DrawLine for actual model outline
-                    local minDim, maxDim = GetModelDimensions(GetEntityModel(entity.entity))
-                    
-                    -- Define the 8 corners of the bounding box
-                    local corners = {
-                        vector3(minDim.x, minDim.y, minDim.z), -- 1: Bottom front left
-                        vector3(maxDim.x, minDim.y, minDim.z), -- 2: Bottom front right
-                        vector3(maxDim.x, maxDim.y, minDim.z), -- 3: Bottom back right
-                        vector3(minDim.x, maxDim.y, minDim.z), -- 4: Bottom back left
-                        vector3(minDim.x, minDim.y, maxDim.z), -- 5: Top front left
-                        vector3(maxDim.x, minDim.y, maxDim.z), -- 6: Top front right
-                        vector3(maxDim.x, maxDim.y, maxDim.z), -- 7: Top back right
-                        vector3(minDim.x, maxDim.y, maxDim.z), -- 8: Top back left
+                    -- Draw skeleton using ped bones
+                    local bones = {
+                        -- Head to neck
+                        {0x796E, 0xFB71},  -- SKEL_Head to SKEL_Neck_1
+                        -- Neck to spine
+                        {0xFB71, 0x5C57},  -- SKEL_Neck_1 to SKEL_Spine3
+                        {0x5C57, 0x60F2},  -- SKEL_Spine3 to SKEL_Spine2
+                        {0x60F2, 0x60F1},  -- SKEL_Spine2 to SKEL_Spine1
+                        {0x60F1, 0x60F0},  -- SKEL_Spine1 to SKEL_Spine0
+                        {0x60F0, 0xE0FD},  -- SKEL_Spine0 to SKEL_Pelvis
+                        -- Left arm
+                        {0x5C57, 0x9D4D},  -- SKEL_Spine3 to SKEL_L_Clavicle
+                        {0x9D4D, 0xB1C5},  -- SKEL_L_Clavicle to SKEL_L_UpperArm
+                        {0xB1C5, 0xEEEB},  -- SKEL_L_UpperArm to SKEL_L_Forearm
+                        {0xEEEB, 0x49D9},  -- SKEL_L_Forearm to SKEL_L_Hand
+                        -- Right arm
+                        {0x5C57, 0x29D2},  -- SKEL_Spine3 to SKEL_R_Clavicle
+                        {0x29D2, 0x9D4D},  -- SKEL_R_Clavicle to SKEL_R_UpperArm
+                        {0x9D4D, 0xB1C5},  -- SKEL_R_UpperArm to SKEL_R_Forearm
+                        {0xB1C5, 0xDEAD},  -- SKEL_R_Forearm to SKEL_R_Hand
+                        -- Left leg
+                        {0xE0FD, 0xB3FE},  -- SKEL_Pelvis to SKEL_L_Thigh
+                        {0xB3FE, 0x3FCF},  -- SKEL_L_Thigh to SKEL_L_Calf
+                        {0x3FCF, 0x08C4},  -- SKEL_L_Calf to SKEL_L_Foot
+                        {0x08C4, 0xCC4D},  -- SKEL_L_Foot to SKEL_L_Toe
+                        -- Right leg
+                        {0xE0FD, 0x5C57},  -- SKEL_Pelvis to SKEL_R_Thigh
+                        {0x5C57, 0x3779},  -- SKEL_R_Thigh to SKEL_R_Calf
+                        {0x3779, 0xCC4D},  -- SKEL_R_Calf to SKEL_R_Foot
+                        {0xCC4D, 0x512D},  -- SKEL_R_Foot to SKEL_R_Toe
                     }
                     
-                    -- Convert corners to world coordinates
-                    local worldCorners = {}
-                    for i, corner in ipairs(corners) do
-                        worldCorners[i] = GetOffsetFromEntityInWorldCoords(entity.entity, corner.x, corner.y, corner.z)
+                    -- Draw lines between bones
+                    for _, bonePair in ipairs(bones) do
+                        local bone1Coords = GetPedBoneCoords(entity.entity, bonePair[1], 0.0, 0.0, 0.0)
+                        local bone2Coords = GetPedBoneCoords(entity.entity, bonePair[2], 0.0, 0.0, 0.0)
+                        
+                        -- Only draw if both bones exist
+                        if bone1Coords.x ~= 0.0 and bone2Coords.x ~= 0.0 then
+                            DrawLine(bone1Coords.x, bone1Coords.y, bone1Coords.z, 
+                                    bone2Coords.x, bone2Coords.y, bone2Coords.z, 
+                                    r, g, b, a)
+                        end
                     end
                     
-                    -- Draw bottom square (1-2-3-4-1)
-                    DrawLine(worldCorners[1].x, worldCorners[1].y, worldCorners[1].z, worldCorners[2].x, worldCorners[2].y, worldCorners[2].z, r, g, b, a)
-                    DrawLine(worldCorners[2].x, worldCorners[2].y, worldCorners[2].z, worldCorners[3].x, worldCorners[3].y, worldCorners[3].z, r, g, b, a)
-                    DrawLine(worldCorners[3].x, worldCorners[3].y, worldCorners[3].z, worldCorners[4].x, worldCorners[4].y, worldCorners[4].z, r, g, b, a)
-                    DrawLine(worldCorners[4].x, worldCorners[4].y, worldCorners[4].z, worldCorners[1].x, worldCorners[1].y, worldCorners[1].z, r, g, b, a)
-                    
-                    -- Draw top square (5-6-7-8-5)
-                    DrawLine(worldCorners[5].x, worldCorners[5].y, worldCorners[5].z, worldCorners[6].x, worldCorners[6].y, worldCorners[6].z, r, g, b, a)
-                    DrawLine(worldCorners[6].x, worldCorners[6].y, worldCorners[6].z, worldCorners[7].x, worldCorners[7].y, worldCorners[7].z, r, g, b, a)
-                    DrawLine(worldCorners[7].x, worldCorners[7].y, worldCorners[7].z, worldCorners[8].x, worldCorners[8].y, worldCorners[8].z, r, g, b, a)
-                    DrawLine(worldCorners[8].x, worldCorners[8].y, worldCorners[8].z, worldCorners[5].x, worldCorners[5].y, worldCorners[5].z, r, g, b, a)
-                    
-                    -- Draw vertical lines connecting bottom to top (1-5, 2-6, 3-7, 4-8)
-                    DrawLine(worldCorners[1].x, worldCorners[1].y, worldCorners[1].z, worldCorners[5].x, worldCorners[5].y, worldCorners[5].z, r, g, b, a)
-                    DrawLine(worldCorners[2].x, worldCorners[2].y, worldCorners[2].z, worldCorners[6].x, worldCorners[6].y, worldCorners[6].z, r, g, b, a)
-                    DrawLine(worldCorners[3].x, worldCorners[3].y, worldCorners[3].z, worldCorners[7].x, worldCorners[7].y, worldCorners[7].z, r, g, b, a)
-                    DrawLine(worldCorners[4].x, worldCorners[4].y, worldCorners[4].z, worldCorners[8].x, worldCorners[8].y, worldCorners[8].z, r, g, b, a)
-                    
-                    -- Draw corner markers for emphasis
-                    for _, corner in ipairs(worldCorners) do
-                        DrawMarker(28, corner.x, corner.y, corner.z, 0, 0, 0, 0, 0, 0, 0.05, 0.05, 0.05, r, g, b, 255, false, false, 2, false, nil, nil, false)
+                    -- Draw small spheres at joint positions for emphasis
+                    local jointBones = {0x796E, 0xFB71, 0x5C57, 0x60F0, 0xE0FD, 0xB1C5, 0xEEEB, 0x49D9, 0xDEAD, 0xB3FE, 0x3FCF, 0x08C4, 0x3779, 0xCC4D}
+                    for _, bone in ipairs(jointBones) do
+                        local boneCoords = GetPedBoneCoords(entity.entity, bone, 0.0, 0.0, 0.0)
+                        if boneCoords.x ~= 0.0 then
+                            DrawMarker(28, boneCoords.x, boneCoords.y, boneCoords.z, 0, 0, 0, 0, 0, 0, 0.03, 0.03, 0.03, r, g, b, 255, false, false, 2, false, nil, nil, false)
+                        end
                     end
                     
                     -- Get head position for NUI info panel

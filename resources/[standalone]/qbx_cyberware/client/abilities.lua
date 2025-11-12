@@ -164,20 +164,34 @@ CreateThread(function()
                 if didDoubleJump then
                     didDoubleJump = false
                     
-                    -- Play combat roll animation
-                    local playerPed = PlayerPedId()
-                    
-                    -- Request animation dictionary
-                    RequestAnimDict('move_jump')
-                    while not HasAnimDictLoaded('move_jump') do
-                        Wait(0)
-                    end
-                    
-                    -- Play the roll forward animation with higher priority
-                    TaskPlayAnim(playerPed, 'move_jump', 'roll_fwd', 8.0, -8.0, 1000, 1, 0, false, false, false)
-                    
-                    exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 1000)
-                    print('^2[Cyberware]^7 Playing combat roll animation')
+                    -- Play combat roll animation in a thread
+                    CreateThread(function()
+                        local playerPed = PlayerPedId()
+                        
+                        -- Request multiple animation dictionaries
+                        local animDict = 'missheistdockssetup1ig_10@base'
+                        local animName = 'dive_fwd_loop'
+                        
+                        RequestAnimDict(animDict)
+                        local timeout = 0
+                        while not HasAnimDictLoaded(animDict) and timeout < 1000 do
+                            Wait(10)
+                            timeout = timeout + 10
+                        end
+                        
+                        if HasAnimDictLoaded(animDict) then
+                            -- Force the animation to play
+                            TaskPlayAnim(playerPed, animDict, animName, 8.0, -8.0, 600, 0, 0.0, false, false, false)
+                            exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
+                            print('^2[Cyberware]^7 Playing dive animation')
+                            
+                            Wait(700)
+                            ClearPedTasks(playerPed)
+                        else
+                            print('^1[Cyberware]^7 Failed to load animation dict')
+                            exports.qbx_core:Notify('🎯 Perfect Landing!', 'success', 1000)
+                        end
+                    end)
                 end
                 
                 jumpCount = 0
