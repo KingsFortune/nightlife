@@ -277,14 +277,9 @@ CreateThread(function()
                 if newVelX ~= vel.x or newVelY ~= vel.y then
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
-                    -- Force rotation to face velocity direction (even during fall animation)
+                    -- Force rotation to face velocity direction even during animations
                     local velocityHeading = math.deg(math.atan2(newVelY, newVelX)) - 90.0
                     SetEntityHeading(ped, velocityHeading)
-                    
-                    -- If in falling animation, clear it to allow free movement
-                    if didDoubleJump and IsPedFalling(ped) then
-                        ClearPedTasks(ped)
-                    end
                 end
             end
             
