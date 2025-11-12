@@ -176,15 +176,15 @@ CreateThread(function()
                 ClearPedTasksImmediately(ped)
                 SetPedCanRagdoll(ped, false)
                 
-                -- Play high land run animation
-                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
+                -- Play high land run animation with flag 48 (allows movement)
+                TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 48, 0, false, false, false)
                 print('^2[Cyberware]^7 High land run animation playing!')
                 
                 exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 800)
                 
-                -- Re-enable ragdoll after animation
+                -- Re-enable ragdoll quickly
                 CreateThread(function()
-                    Wait(500)
+                    Wait(400)
                     SetPedCanRagdoll(PlayerPedId(), true)
                     print('^2[Cyberware]^7 Animation complete!')
                 end)
