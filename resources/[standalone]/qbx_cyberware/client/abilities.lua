@@ -162,21 +162,23 @@ CreateThread(function()
                 if didDoubleJump then
                     didDoubleJump = false
                     
-                    -- NEW APPROACH: Simple, reliable combat roll
-                    -- Let the game's land_fall play naturally, then immediately chain our roll
+                    -- NEW APPROACH: Interrupt land_fall immediately
                     CreateThread(function()
                         local rollPed = PlayerPedId()
                         
-                        -- Wait for land animation to finish (land_fall is very short - ~200ms)
-                        Wait(200)
-                        
-                        -- Use the ACTUAL combat roll animation from GTA V
+                        -- Preload the combat roll animation NOW while still in air
                         local dict = 'move_strafe@roll'
-                        local anim = 'combatroll_fwd_p1_45'
+                        local anim = 'combatroll_fwd_p2_00'
                         lib.requestAnimDict(dict)
                         
-                        -- Play combat roll
-                        TaskPlayAnim(rollPed, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
+                        -- Wait just 50ms (much shorter than before)
+                        Wait(50)
+                        
+                        -- IMMEDIATELY interrupt whatever animation is playing
+                        ClearPedTasksImmediately(rollPed)
+                        
+                        -- Force combat roll instantly
+                        TaskPlayAnim(rollPed, dict, anim, 8.0, -8.0, -1, 2, 0, false, false, false)
                         
                         -- Let it play for duration
                         Wait(800)
