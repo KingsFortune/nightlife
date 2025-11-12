@@ -27,8 +27,12 @@ window.addEventListener('message', (event) => {
         overlayActive = false;
         document.getElementById('kiroshi-overlay').classList.remove('active');
         document.getElementById('entity-markers').innerHTML = '';
+        // DON'T clear entityDataCache - keep persistent data between scans
+        console.log('[KIROSHI NUI] Overlay deactivated (data persists)');
+    } else if (data.action === 'clearCache') {
+        // Only clear cache when explicitly requested
         entityDataCache = {};
-        console.log('[KIROSHI NUI] Overlay deactivated');
+        console.log('[KIROSHI NUI] Cache cleared');
     } else if (data.action === 'updateEntities') {
         entities = data.entities || [];
         updateMarkers();

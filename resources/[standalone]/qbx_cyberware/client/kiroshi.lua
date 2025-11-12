@@ -3,6 +3,7 @@ local config = require 'config.shared'
 local kiroshiActive = false
 local scannedEntities = {}
 local cooldowns = {} -- Local cooldown tracking
+local persistentEntityData = {} -- Store entity data permanently (survives scans)
 
 -- Check if ability is on cooldown
 local function IsOnCooldown(implantId)
@@ -38,8 +39,25 @@ RegisterNetEvent('qbx_cyberware:client:resetKiroshi', function()
     end
     cooldowns = {}
     scannedEntities = {}
-    print('^2[KIROSHI]^7 Reset complete')
+    persistentEntityData = {}
+    
+    -- Clear NUI cache
+    SendNUIMessage({
+        action = 'clearCache'
+    })
+    
+    print('^2[KIROSHI]^7 Reset complete (cache cleared)')
 end)
+
+-- Command to clear scan data cache
+RegisterCommand('clearkiroshistorage', function()
+    persistentEntityData = {}
+    SendNUIMessage({
+        action = 'clearCache'
+    })
+    exports.qbx_core:Notify('🗑️ Kiroshi scan data cleared', 'inform')
+    print('^2[KIROSHI]^7 Persistent scan data cleared')
+end, false)
 
 -- Activate Kiroshi Scan
 function ActivateKiroshiScan()
@@ -184,62 +202,62 @@ CreateThread(function()
                     local maxHealth = GetEntityMaxHealth(entity.entity)
                     local healthPercent = math.floor((currentHealth / maxHealth) * 100)
                     
-                    -- Draw 3D outline box around entity
-                    local minDim, maxDim = GetModelDimensions(GetEntityModel(entity.entity))
-                    local entityPos = GetEntityCoords(entity.entity)
-                    local entityRot = GetEntityRotation(entity.entity, 2)
-                    
-                    -- Get entity dimensions
-                    local height = maxDim.z - minDim.z
-                    local width = (maxDim.x - minDim.x) + (maxDim.y - minDim.y)
-                    
                     -- Set color based on type (gold for players, blue for NPCs)
                     local r, g, b, a
                     if entity.isPlayer then
-                        r, g, b, a = 255, 215, 0, 200  -- Gold
+                        r, g, b, a = 255, 215, 0, 150  -- Gold
                     else
-                        r, g, b, a = 100, 150, 255, 200  -- Blue
+                        r, g, b, a = 100, 150, 255, 150  -- Blue
                     end
                     
-                    -- Draw outline box around entity
-                    DrawMarker(
-                        28, -- Marker type (upside down cone/cylinder)
-                        entityPos.x, entityPos.y, entityPos.z,
-                        0.0, 0.0, 0.0,
-                        0.0, 0.0, 0.0,
-                        width * 0.5, width * 0.5, height,
-                        r, g, b, a,
-                        false, false, 2, false, nil, nil, false
-                    )
+                    -- Draw outline using DrawLine for actual model outline
+                    local minDim, maxDim = GetModelDimensions(GetEntityModel(entity.entity))
                     
-                    -- Draw corner brackets in 3D space
-                    local cornerSize = 0.15
+                    -- Define the 8 corners of the bounding box
                     local corners = {
-                        vector3(minDim.x, minDim.y, maxDim.z), -- Top front left
-                        vector3(maxDim.x, minDim.y, maxDim.z), -- Top front right
-                        vector3(minDim.x, maxDim.y, maxDim.z), -- Top back left
-                        vector3(maxDim.x, maxDim.y, maxDim.z), -- Top back right
-                        vector3(minDim.x, minDim.y, minDim.z), -- Bottom front left
-                        vector3(maxDim.x, minDim.y, minDim.z), -- Bottom front right
-                        vector3(minDim.x, maxDim.y, minDim.z), -- Bottom back left
-                        vector3(maxDim.x, maxDim.y, minDim.z), -- Bottom back right
+                        vector3(minDim.x, minDim.y, minDim.z), -- 1: Bottom front left
+                        vector3(maxDim.x, minDim.y, minDim.z), -- 2: Bottom front right
+                        vector3(maxDim.x, maxDim.y, minDim.z), -- 3: Bottom back right
+                        vector3(minDim.x, maxDim.y, minDim.z), -- 4: Bottom back left
+                        vector3(minDim.x, minDim.y, maxDim.z), -- 5: Top front left
+                        vector3(maxDim.x, minDim.y, maxDim.z), -- 6: Top front right
+                        vector3(maxDim.x, maxDim.y, maxDim.z), -- 7: Top back right
+                        vector3(minDim.x, maxDim.y, maxDim.z), -- 8: Top back left
                     }
                     
-                    -- Draw glowing lines at corners
-                    for _, corner in ipairs(corners) do
-                        local worldCorner = GetOffsetFromEntityInWorldCoords(entity.entity, corner.x, corner.y, corner.z)
-                        DrawMarker(
-                            1, -- Cylinder
-                            worldCorner.x, worldCorner.y, worldCorner.z,
-                            0.0, 0.0, 0.0,
-                            0.0, 0.0, 0.0,
-                            0.05, 0.05, 0.05,
-                            r, g, b, 255,
-                            false, false, 2, false, nil, nil, false
-                        )
+                    -- Convert corners to world coordinates
+                    local worldCorners = {}
+                    for i, corner in ipairs(corners) do
+                        worldCorners[i] = GetOffsetFromEntityInWorldCoords(entity.entity, corner.x, corner.y, corner.z)
+                    end
+                    
+                    -- Draw bottom square (1-2-3-4-1)
+                    DrawLine(worldCorners[1].x, worldCorners[1].y, worldCorners[1].z, worldCorners[2].x, worldCorners[2].y, worldCorners[2].z, r, g, b, a)
+                    DrawLine(worldCorners[2].x, worldCorners[2].y, worldCorners[2].z, worldCorners[3].x, worldCorners[3].y, worldCorners[3].z, r, g, b, a)
+                    DrawLine(worldCorners[3].x, worldCorners[3].y, worldCorners[3].z, worldCorners[4].x, worldCorners[4].y, worldCorners[4].z, r, g, b, a)
+                    DrawLine(worldCorners[4].x, worldCorners[4].y, worldCorners[4].z, worldCorners[1].x, worldCorners[1].y, worldCorners[1].z, r, g, b, a)
+                    
+                    -- Draw top square (5-6-7-8-5)
+                    DrawLine(worldCorners[5].x, worldCorners[5].y, worldCorners[5].z, worldCorners[6].x, worldCorners[6].y, worldCorners[6].z, r, g, b, a)
+                    DrawLine(worldCorners[6].x, worldCorners[6].y, worldCorners[6].z, worldCorners[7].x, worldCorners[7].y, worldCorners[7].z, r, g, b, a)
+                    DrawLine(worldCorners[7].x, worldCorners[7].y, worldCorners[7].z, worldCorners[8].x, worldCorners[8].y, worldCorners[8].z, r, g, b, a)
+                    DrawLine(worldCorners[8].x, worldCorners[8].y, worldCorners[8].z, worldCorners[5].x, worldCorners[5].y, worldCorners[5].z, r, g, b, a)
+                    
+                    -- Draw vertical lines connecting bottom to top (1-5, 2-6, 3-7, 4-8)
+                    DrawLine(worldCorners[1].x, worldCorners[1].y, worldCorners[1].z, worldCorners[5].x, worldCorners[5].y, worldCorners[5].z, r, g, b, a)
+                    DrawLine(worldCorners[2].x, worldCorners[2].y, worldCorners[2].z, worldCorners[6].x, worldCorners[6].y, worldCorners[6].z, r, g, b, a)
+                    DrawLine(worldCorners[3].x, worldCorners[3].y, worldCorners[3].z, worldCorners[7].x, worldCorners[7].y, worldCorners[7].z, r, g, b, a)
+                    DrawLine(worldCorners[4].x, worldCorners[4].y, worldCorners[4].z, worldCorners[8].x, worldCorners[8].y, worldCorners[8].z, r, g, b, a)
+                    
+                    -- Draw corner markers for emphasis
+                    for _, corner in ipairs(worldCorners) do
+                        DrawMarker(28, corner.x, corner.y, corner.z, 0, 0, 0, 0, 0, 0, 0.05, 0.05, 0.05, r, g, b, 255, false, false, 2, false, nil, nil, false)
                     end
                     
                     -- Get head position for NUI info panel
+                    local minDim, maxDim = GetModelDimensions(GetEntityModel(entity.entity))
+                    local height = maxDim.z - minDim.z
+                    local entityPos = GetEntityCoords(entity.entity)
                     local headPos = GetPedBoneCoords(entity.entity, 0x796E, 0.0, 0.0, 0.0)
                     
                     if headPos.x == 0.0 and headPos.y == 0.0 then

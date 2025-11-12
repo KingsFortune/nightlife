@@ -165,26 +165,19 @@ CreateThread(function()
                     didDoubleJump = false
                     
                     -- Play combat roll animation
-                    CreateThread(function()
-                        local playerPed = PlayerPedId()
-                        
-                        -- Request animation dictionary
-                        lib.requestAnimDict('move_jump')
-                        
-                        -- Clear any existing tasks
-                        ClearPedTasks(playerPed)
-                        
-                        -- Play the roll forward animation
-                        TaskPlayAnim(playerPed, 'move_jump', 'roll_fwd', 8.0, -8.0, 800, 0, 0, false, false, false)
-                        
-                        exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 1000)
-                        
-                        -- Wait for animation to finish
-                        Wait(800)
-                        
-                        -- Clear the animation
-                        ClearPedTasks(playerPed)
-                    end)
+                    local playerPed = PlayerPedId()
+                    
+                    -- Request animation dictionary
+                    RequestAnimDict('move_jump')
+                    while not HasAnimDictLoaded('move_jump') do
+                        Wait(0)
+                    end
+                    
+                    -- Play the roll forward animation with higher priority
+                    TaskPlayAnim(playerPed, 'move_jump', 'roll_fwd', 8.0, -8.0, 1000, 1, 0, false, false, false)
+                    
+                    exports.qbx_core:Notify('🎯 Combat Roll!', 'success', 1000)
+                    print('^2[Cyberware]^7 Playing combat roll animation')
                 end
                 
                 jumpCount = 0
