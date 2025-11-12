@@ -255,21 +255,48 @@ CreateThread(function()
                 local moveSpeed = 0.25
                 local newVelX = vel.x
                 local newVelY = vel.y
+                local inputHeading = nil
                 
-                -- Fixed direction calculations
-                if IsControlPressed(0, 32) then -- W - Forward
+                -- Get camera heading for relative controls
+                local camHeading = GetGameplayCamRelativeHeading()
+                local pedHeading = GetEntityHeading(ped)
+                local finalCamHeading = camHeading + pedHeading
+                
+                -- Calculate input direction relative to camera
+                if IsControlPressed(0, 32) and IsControlPressed(0, 34) then -- W+A
+                    inputHeading = finalCamHeading - 45.0
+                    local rad = math.rad(inputHeading)
+                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
+                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
+                elseif IsControlPressed(0, 32) and IsControlPressed(0, 35) then -- W+D
+                    inputHeading = finalCamHeading + 45.0
+                    local rad = math.rad(inputHeading)
+                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
+                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
+                elseif IsControlPressed(0, 33) and IsControlPressed(0, 34) then -- S+A
+                    inputHeading = finalCamHeading - 135.0
+                    local rad = math.rad(inputHeading)
+                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
+                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
+                elseif IsControlPressed(0, 33) and IsControlPressed(0, 35) then -- S+D
+                    inputHeading = finalCamHeading + 135.0
+                    local rad = math.rad(inputHeading)
+                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
+                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
+                elseif IsControlPressed(0, 32) then -- W
+                    inputHeading = finalCamHeading
                     newVelX = newVelX + (-math.sin(radians) * moveSpeed)
                     newVelY = newVelY + (math.cos(radians) * moveSpeed)
-                end
-                if IsControlPressed(0, 33) then -- S - Backward
+                elseif IsControlPressed(0, 33) then -- S
+                    inputHeading = finalCamHeading + 180.0
                     newVelX = newVelX - (-math.sin(radians) * moveSpeed)
                     newVelY = newVelY - (math.cos(radians) * moveSpeed)
-                end
-                if IsControlPressed(0, 34) then -- A - Left
+                elseif IsControlPressed(0, 34) then -- A
+                    inputHeading = finalCamHeading - 90.0
                     newVelX = newVelX - (math.cos(radians) * moveSpeed)
                     newVelY = newVelY - (math.sin(radians) * moveSpeed)
-                end
-                if IsControlPressed(0, 35) then -- D - Right
+                elseif IsControlPressed(0, 35) then -- D
+                    inputHeading = finalCamHeading + 90.0
                     newVelX = newVelX + (math.cos(radians) * moveSpeed)
                     newVelY = newVelY + (math.sin(radians) * moveSpeed)
                 end
@@ -277,10 +304,11 @@ CreateThread(function()
                 if newVelX ~= vel.x or newVelY ~= vel.y then
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
-                    -- FORCE rotation to face velocity direction (override animations)
-                    local velocityHeading = math.deg(math.atan2(newVelY, newVelX)) - 90.0
-                    SetEntityHeading(ped, velocityHeading)
-                    SetPedDesiredHeading(ped, velocityHeading)
+                    -- Rotate character to face INPUT direction (camera-relative)
+                    if inputHeading then
+                        SetEntityHeading(ped, inputHeading)
+                        SetPedDesiredHeading(ped, inputHeading)
+                    end
                 end
             end
             
