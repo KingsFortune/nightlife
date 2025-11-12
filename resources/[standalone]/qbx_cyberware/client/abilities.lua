@@ -158,6 +158,8 @@ end
 -- REINFORCED TENDONS: Enhanced Jump & Double Jump
 local jumpCount = 0
 local lastJumpTime = 0
+local disableRagdollUntil = 0
+local isJumpingNow = false
 
 CreateThread(function()
     while true do
@@ -167,17 +169,20 @@ CreateThread(function()
             local ped = PlayerPedId()
             local implant = config.Implants.reinforced_tendons
             
-            -- Prevent ragdoll on landing
-            SetPedCanRagdoll(ped, false)
-            SetPedConfigFlag(ped, 104, true)
+            -- Only disable ragdoll temporarily after high jumps
+            if GetGameTimer() < disableRagdollUntil then
+                SetPedCanRagdoll(ped, false)
+            else
+                SetPedCanRagdoll(ped, true)
+            end
             
-            -- Air control
-            if IsPedFalling(ped) then
+            -- Air control when in air (both jumping and falling)
+            if IsPedFalling(ped) or IsPedJumping(ped) or isJumpingNow then
                 local vel = GetEntityVelocity(ped)
                 local heading = GetEntityHeading(ped)
                 local radians = math.rad(heading)
                 
-                local moveSpeed = 0.2
+                local moveSpeed = 0.25
                 local newVelX = vel.x
                 local newVelY = vel.y
                 
@@ -203,52 +208,53 @@ CreateThread(function()
                 end
             end
             
-            -- Simple ground check
-            local isOnGround = IsPedOnFoot(ped) and not IsPedFalling(ped) and not IsPedJumping(ped) and not IsPedRagdoll(ped)
+            -- Ground check
+            local isOnGround = IsPedOnFoot(ped) and not IsPedFalling(ped) and not IsPedJumping(ped) and not isJumpingNow
             
-            -- Reset jump count when on ground
             if isOnGround then
                 jumpCount = 0
+                isJumpingNow = false
             end
             
-            -- Jump detection
+            -- Jump boost
             if IsControlJustPressed(0, 22) then -- SPACE
                 local currentTime = GetGameTimer()
                 
-                -- First jump (on ground)
-                if isOnGround then
+                if isOnGround and jumpCount == 0 then
+                    -- First jump only when on ground and haven't jumped yet
                     jumpCount = 1
                     lastJumpTime = currentTime
+                    isJumpingNow = true
                     
-                    -- Let normal jump happen, then boost
-                    CreateThread(function()
-                        Wait(100)
+                    -- Force the jump
+                    TaskJump(ped, true)
+                    
+                    -- Boost after slight delay
+                    SetTimeout(120, function()
                         local p = PlayerPedId()
-                        local v = GetEntityVelocity(p)
-                        SetEntityVelocity(p, v.x, v.y, v.z + (implant.effects.jump_height_first * 2.0))
+                        if IsPedJumping(p) or IsPedFalling(p) or isJumpingNow then
+                            local v = GetEntityVelocity(p)
+                            -- Much higher first jump
+                            SetEntityVelocity(p, v.x, v.y, 15.0)
+                        end
                     end)
                     
-                -- Double jump (in air)
-                elseif jumpCount == 1 and (currentTime - lastJumpTime) > 300 then
+                elseif jumpCount == 1 and (currentTime - lastJumpTime) > 400 and not isOnGround then
+                    -- Double jump only once, in air, with delay
                     jumpCount = 2
                     lastJumpTime = currentTime
                     
-                    CreateThread(function()
-                        Wait(50)
-                        local p = PlayerPedId()
-                        local v = GetEntityVelocity(p)
-                        SetEntityVelocity(p, v.x, v.y, implant.effects.jump_height_double * 3.0)
-                        exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
-                    end)
+                    local v = GetEntityVelocity(ped)
+                    -- Even higher double jump
+                    SetEntityVelocity(ped, v.x, v.y, 20.0)
+                    
+                    -- Disable ragdoll for 4 seconds after double jump
+                    disableRagdollUntil = GetGameTimer() + 4000
+                    
+                    exports.qbx_core:Notify('⬆️ DOUBLE JUMP!', 'success', 1000)
                 end
             end
         else
-            -- Reset if no implant
-            local ped = PlayerPedId()
-            if DoesEntityExist(ped) then
-                SetPedCanRagdoll(ped, true)
-                SetPedConfigFlag(ped, 104, false)
-            end
             Wait(500)
         end
     end
