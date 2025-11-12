@@ -53,7 +53,7 @@ RegisterNetEvent('qbx_cyberware:client:implantInstalled', function(implantId)
 
     playerCyberware[implantId] = {
         installed = true,
-        install_date = os.time()
+        install_date = GetGameTimer() -- Use game timer instead of os.time()
     }
 
     -- Apply visual effects
@@ -75,11 +75,14 @@ end)
 -- On player loaded
 RegisterNetEvent('QBCore:Client:OnPlayerLoaded', function()
     Wait(1000)
-    playerCyberware = lib.callback.await('qbx_cyberware:server:getCyberware', false)
+    print('^2[qbx_cyberware]^7 Player loaded, syncing cyberware...')
+    playerCyberware = lib.callback.await('qbx_cyberware:server:getCyberware', false) or {}
+    print('^2[qbx_cyberware]^7 Received cyberware data:', json.encode(playerCyberware))
     
     -- Apply all visual effects for installed implants
     for implantId, data in pairs(playerCyberware) do
         if data.installed then
+            print('^2[qbx_cyberware]^7 Applying visuals for:', implantId)
             TriggerEvent('qbx_cyberware:client:applyVisuals', implantId)
         end
     end

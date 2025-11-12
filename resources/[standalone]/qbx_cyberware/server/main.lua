@@ -172,7 +172,9 @@ exports('IsAdrenalineActive', function(source)
 end)
 
 -- Useable items for each implant
+local implantCount = 0
 for implantId, implant in pairs(config.Implants) do
+    implantCount = implantCount + 1
     exports.qbx_core:CreateUseableItem(implant.item, function(source)
         local player = exports.qbx_core:GetPlayer(source)
         if not player then return end
@@ -197,8 +199,9 @@ end
 -- On player loaded, sync cyberware
 RegisterNetEvent('QBCore:Server:OnPlayerLoaded', function()
     local src = source
+    Wait(500) -- Small delay to ensure player data is loaded
     local cyberware = GetPlayerCyberware(src)
     TriggerClientEvent('qbx_cyberware:client:syncCyberware', src, cyberware)
 end)
 
-print('^2[qbx_cyberware]^7 Server initialized with '..#config.Implants..' implants')
+print('^2[qbx_cyberware]^7 Server initialized with '..implantCount..' implants')
