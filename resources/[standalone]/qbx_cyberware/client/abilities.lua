@@ -168,9 +168,13 @@ CreateThread(function()
                 local dict = 'move_fall@beastjump'
                 local anim = 'high_land_run'
                 
-                -- Capture velocity for momentum preservation
+                -- Capture velocity AND heading for momentum preservation
                 local capturedVel = GetEntityVelocity(ped)
                 local velX, velY = capturedVel.x, capturedVel.y
+                local landingHeading = GetEntityHeading(ped)
+                
+                -- Calculate velocity heading to align movement with facing
+                local velocityHeading = math.deg(math.atan2(velY, velX)) - 90.0
                 
                 SetPedCanRagdoll(ped, false)
                 TaskPlayAnim(ped, dict, anim, 8.0, -8.0, -1, 0, 0, false, false, false)
@@ -185,15 +189,25 @@ CreateThread(function()
                     -- Apply velocity for most of the animation (800ms lets hands touch ground and stand up)
                     while GetGameTimer() - startTime < 800 do
                         SetEntityVelocity(rollPed, velX, velY, 0.0)
+                        -- Keep heading aligned with velocity during roll
+                        SetEntityHeading(rollPed, landingHeading)
                         Wait(0)
                     end
                     
                     -- CUT animation right when standing up (before idle pause)
                     StopAnimTask(rollPed, dict, anim, 1.0)
                     
-                    -- Re-enable ragdoll and restore velocity
+                    -- Re-enable ragdoll and restore velocity aligned with heading
                     SetPedCanRagdoll(rollPed, true)
-                    SetEntityVelocity(rollPed, velX, velY, 0.0)
+                    
+                    -- Apply velocity in the direction character is facing for smooth transition
+                    local finalHeading = GetEntityHeading(rollPed)
+                    local rad = math.rad(finalHeading)
+                    local speed = math.sqrt(velX * velX + velY * velY)
+                    local alignedVelX = -math.sin(rad) * speed
+                    local alignedVelY = math.cos(rad) * speed
+                    
+                    SetEntityVelocity(rollPed, alignedVelX, alignedVelY, 0.0)
                     
                     -- Sprint boost for smooth transition into running
                     local player = PlayerId()
@@ -249,45 +263,58 @@ CreateThread(function()
             if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 then
                 local vel = GetEntityVelocity(ped)
                 
-                -- Increased air control for smoother feel
-                local moveSpeed = 0.25
-                local newVelX = vel.x
-                local newVelY = vel.y
-                local inputHeading = nil
+                -- MASSIVELY increased air control for fluid movement
+                local moveSpeed = 0.8
+                local targetVelX = 0.0
+                local targetVelY = 0.0
+                local hasInput = false
                 
                 -- Get camera heading for relative controls
                 local camHeading = GetGameplayCamRelativeHeading()
                 local pedHeading = GetEntityHeading(ped)
                 local finalCamHeading = camHeading + pedHeading
+                local inputHeading = nil
                 
-                -- Calculate input direction relative to camera and apply velocity in that direction
+                -- Calculate input direction relative to camera
                 if IsControlPressed(0, 32) and IsControlPressed(0, 34) then -- W+A (forward-left)
                     inputHeading = finalCamHeading + 45.0
+                    hasInput = true
                 elseif IsControlPressed(0, 32) and IsControlPressed(0, 35) then -- W+D (forward-right)
                     inputHeading = finalCamHeading - 45.0
+                    hasInput = true
                 elseif IsControlPressed(0, 33) and IsControlPressed(0, 34) then -- S+A (back-left)
                     inputHeading = finalCamHeading + 135.0
+                    hasInput = true
                 elseif IsControlPressed(0, 33) and IsControlPressed(0, 35) then -- S+D (back-right)
                     inputHeading = finalCamHeading - 135.0
+                    hasInput = true
                 elseif IsControlPressed(0, 32) then -- W (forward)
                     inputHeading = finalCamHeading
+                    hasInput = true
                 elseif IsControlPressed(0, 33) then -- S (backward)
                     inputHeading = finalCamHeading + 180.0
+                    hasInput = true
                 elseif IsControlPressed(0, 34) then -- A (left)
                     inputHeading = finalCamHeading + 90.0
+                    hasInput = true
                 elseif IsControlPressed(0, 35) then -- D (right)
                     inputHeading = finalCamHeading - 90.0
+                    hasInput = true
                 end
                 
-                if inputHeading then
-                    -- Apply velocity in the INPUT direction
+                if hasInput and inputHeading then
+                    -- Calculate target velocity in input direction
                     local rad = math.rad(inputHeading)
-                    newVelX = newVelX + (-math.sin(rad) * moveSpeed)
-                    newVelY = newVelY + (math.cos(rad) * moveSpeed)
+                    targetVelX = -math.sin(rad) * moveSpeed
+                    targetVelY = math.cos(rad) * moveSpeed
+                    
+                    -- Blend current velocity with target (smoother control)
+                    local newVelX = vel.x + (targetVelX - vel.x) * 0.3
+                    local newVelY = vel.y + (targetVelY - vel.y) * 0.3
                     
                     SetEntityVelocity(ped, newVelX, newVelY, vel.z)
                     
-                    -- Smoothly rotate character to face INPUT direction
+                    -- Smoothly rotate character to face movement direction
                     local currentHeading = GetEntityHeading(ped)
                     local diff = inputHeading - currentHeading
                     
@@ -295,8 +322,8 @@ CreateThread(function()
                     while diff > 180.0 do diff = diff - 360.0 end
                     while diff < -180.0 do diff = diff + 360.0 end
                     
-                    -- Smooth interpolation (15% per frame)
-                    local newHeading = currentHeading + (diff * 0.15)
+                    -- Faster rotation for more responsive feel
+                    local newHeading = currentHeading + (diff * 0.25)
                     SetEntityHeading(ped, newHeading)
                 end
             end
