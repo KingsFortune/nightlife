@@ -143,9 +143,16 @@ CreateThread(function()
             local distanceToGround = coords.z - groundZ
             local velocity = GetEntityVelocity(ped)
             
-            -- When we're very close to ground (within 1 meter) and falling fast
-            if isFalling and distanceToGround < 1.0 and velocity.z < -3.0 then
-                print('^3[Cyberware]^7 INTERCEPTING LANDING - Distance: '..distanceToGround..'m')
+            -- Debug: Print status every 100ms while we're waiting
+            if isFalling then
+                print(string.format('^3[Cyberware]^7 Falling - Distance: %.2fm, VelZ: %.2f, IsFalling: %s', 
+                    distanceToGround, velocity.z, tostring(isFalling)))
+            end
+            
+            -- When we're very close to ground (within 2 meters now - increased range) and falling
+            if isFalling and distanceToGround < 2.0 and velocity.z < -1.0 then
+                print('^1[Cyberware]^7 ========== INTERCEPTING LANDING ==========')
+                print('^3[Cyberware]^7 Distance: '..distanceToGround..'m, Velocity Z: '..velocity.z)
                 
                 -- Preload animation RIGHT NOW
                 local dict = 'move_strafe@roll'
@@ -166,7 +173,7 @@ CreateThread(function()
                     Wait(0)
                 end
                 
-                print('^2[Cyberware]^7 GROUND CONTACT - FORCING ROLL NOW!')
+                print('^1[Cyberware]^7 ========== GROUND CONTACT - FORCING ROLL NOW! ==========')
                 
                 -- INSTANT interrupt and force roll (no delay at all)
                 ClearPedTasksImmediately(ped)
