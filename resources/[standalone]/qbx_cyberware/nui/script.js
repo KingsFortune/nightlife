@@ -6,6 +6,7 @@ const overlay = document.getElementById('kiroshi-overlay');
 const targetInfo = document.getElementById('target-info');
 const vehicleInfo = document.getElementById('vehicle-info');
 const targetOutline = document.getElementById('target-outline');
+const crosshair = document.querySelector('.crosshair');
 
 // Ped info box elements
 const targetName = document.querySelector('.target-name');
@@ -49,8 +50,10 @@ function toggleKiroshi(active) {
     
     if (active) {
         overlay.classList.add('active');
+        crosshair.classList.add('scanning');
     } else {
         overlay.classList.remove('active');
+        crosshair.classList.remove('scanning');
         clearTarget();
     }
 }
@@ -83,15 +86,26 @@ function updateTarget(target) {
     healthFill.style.width = health + '%';
     healthText.textContent = health + '%';
     
-    // Position outline box around target
-    targetOutline.style.left = target.boxX + 'px';
-    targetOutline.style.top = target.boxY + 'px';
-    targetOutline.style.width = target.boxWidth + 'px';
-    targetOutline.style.height = target.boxHeight + 'px';
-    
-    // Position info box to the right of target
-    targetInfo.style.left = (target.boxX + target.boxWidth + 15) + 'px';
-    targetInfo.style.top = target.boxY + 'px';
+    // Position outline box around target (smooth following)
+    requestAnimationFrame(() => {
+        targetOutline.style.left = target.boxX + 'px';
+        targetOutline.style.top = target.boxY + 'px';
+        targetOutline.style.width = target.boxWidth + 'px';
+        targetOutline.style.height = target.boxHeight + 'px';
+        
+        // Position info box to the right of target with screen edge detection
+        const screenWidth = window.innerWidth;
+        const infoWidth = 220; // Approximate width of info box
+        let infoX = target.boxX + target.boxWidth + 15;
+        
+        // If too close to right edge, place on left side
+        if (infoX + infoWidth > screenWidth) {
+            infoX = target.boxX - infoWidth - 15;
+        }
+        
+        targetInfo.style.left = infoX + 'px';
+        targetInfo.style.top = target.boxY + 'px';
+    });
 }
 
 // Update vehicle information
@@ -112,15 +126,26 @@ function updateVehicle(target) {
     vehicleMake.textContent = target.make || 'UNKNOWN';
     vehicleClass.textContent = target.class || 'UNKNOWN';
     
-    // Position outline box around vehicle
-    targetOutline.style.left = target.boxX + 'px';
-    targetOutline.style.top = target.boxY + 'px';
-    targetOutline.style.width = target.boxWidth + 'px';
-    targetOutline.style.height = target.boxHeight + 'px';
-    
-    // Position info box to the right of vehicle
-    vehicleInfo.style.left = (target.boxX + target.boxWidth + 15) + 'px';
-    vehicleInfo.style.top = target.boxY + 'px';
+    // Position outline box around vehicle (smooth following)
+    requestAnimationFrame(() => {
+        targetOutline.style.left = target.boxX + 'px';
+        targetOutline.style.top = target.boxY + 'px';
+        targetOutline.style.width = target.boxWidth + 'px';
+        targetOutline.style.height = target.boxHeight + 'px';
+        
+        // Position info box to the right of vehicle with screen edge detection
+        const screenWidth = window.innerWidth;
+        const infoWidth = 220;
+        let infoX = target.boxX + target.boxWidth + 15;
+        
+        // If too close to right edge, place on left side
+        if (infoX + infoWidth > screenWidth) {
+            infoX = target.boxX - infoWidth - 15;
+        }
+        
+        vehicleInfo.style.left = infoX + 'px';
+        vehicleInfo.style.top = target.boxY + 'px';
+    });
 }
 
 // Clear target display

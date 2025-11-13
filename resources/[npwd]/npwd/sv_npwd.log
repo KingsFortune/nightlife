@@ -1582,3 +1582,6 @@
 {"level":"silly","message":{"data":[],"status":"ok"},"module":"events","timestamp":"2025-11-12T22:53:37.315Z"}
 {"level":"silly","message":"Response Promise Event npwd-contact-getAll:3beda3bf-5a06-454a-98c2-0380ba67fa0d (5.2409ms), Data >>","module":"events","timestamp":"2025-11-12T22:53:37.315Z"}
 {"level":"silly","message":{"data":[],"status":"ok"},"module":"events","timestamp":"2025-11-12T22:53:37.315Z"}
+{"level":"info","message":"Executed query (SELECT id FROM npwd_marketplace_listings WHERE identifier = ? [\"QN30122F\"]) in 5.2008ms'","module":"DBInterface","timestamp":"2025-11-12T23:01:53.481Z"}
+{"level":"info","message":"Executed query (DELETE FROM npwd_marketplace_listings WHERE identifier = ? AND reported = 0 [\"QN30122F\"]) in 0.6224ms'","module":"DBInterface","timestamp":"2025-11-12T23:01:53.482Z"}
+{"level":"info","message":"Unloaded NPWD Player, source: (1)","module":"player","timestamp":"2025-11-12T23:01:53.482Z"}

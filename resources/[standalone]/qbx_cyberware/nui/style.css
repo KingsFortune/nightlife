@@ -27,16 +27,69 @@ body {
 
 #kiroshi-overlay.active {
     opacity: 1;
+    animation: scanlineFlicker 0.15s infinite;
 }
 
-/* ===== CROSSHAIR (CENTER) ===== */
+#kiroshi-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: 
+        repeating-linear-gradient(
+            0deg,
+            rgba(252, 238, 12, 0.03) 0px,
+            rgba(252, 238, 12, 0.03) 1px,
+            transparent 1px,
+            transparent 2px
+        );
+    pointer-events: none;
+    animation: scanlines 8s linear infinite;
+}
+
+#kiroshi-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(ellipse at center, transparent 0%, rgba(252, 238, 12, 0.05) 100%);
+    pointer-events: none;
+}
+
+@keyframes scanlines {
+    0% {
+        transform: translateY(0);
+    }
+    100% {
+        transform: translateY(10px);
+    }
+}
+
+@keyframes scanlineFlicker {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.98;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* ===== CROSSHAIR (CENTER) - Dynamic Recoil Style ===== */
 .crosshair {
     position: absolute;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
+    transition: all 0.1s ease-out;
 }
 
 .crosshair-dot {
@@ -44,17 +97,30 @@ body {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 3px;
-    height: 3px;
+    width: 4px;
+    height: 4px;
     background: #FCEE0C;
     border-radius: 50%;
-    box-shadow: 0 0 6px #FCEE0C;
+    box-shadow: 0 0 8px #FCEE0C, 0 0 15px rgba(252, 238, 12, 0.5);
+    animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+    0%, 100% {
+        opacity: 1;
+        box-shadow: 0 0 8px #FCEE0C, 0 0 15px rgba(252, 238, 12, 0.5);
+    }
+    50% {
+        opacity: 0.8;
+        box-shadow: 0 0 12px #FCEE0C, 0 0 20px rgba(252, 238, 12, 0.7);
+    }
 }
 
 .crosshair-line {
     position: absolute;
-    background: #FCEE0C;
-    box-shadow: 0 0 4px #FCEE0C;
+    background: linear-gradient(to right, transparent, #FCEE0C, transparent);
+    box-shadow: 0 0 6px #FCEE0C;
+    transition: all 0.15s ease-out;
 }
 
 .crosshair-top {
@@ -62,7 +128,8 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 2px;
-    height: 8px;
+    height: 12px;
+    background: linear-gradient(to bottom, transparent, #FCEE0C);
 }
 
 .crosshair-bottom {
@@ -70,24 +137,33 @@ body {
     left: 50%;
     transform: translateX(-50%);
     width: 2px;
-    height: 8px;
+    height: 12px;
+    background: linear-gradient(to top, transparent, #FCEE0C);
 }
 
 .crosshair-left {
     left: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 8px;
+    width: 12px;
     height: 2px;
+    background: linear-gradient(to right, transparent, #FCEE0C);
 }
 
 .crosshair-right {
     right: 0;
     top: 50%;
     transform: translateY(-50%);
-    width: 8px;
+    width: 12px;
     height: 2px;
+    background: linear-gradient(to left, transparent, #FCEE0C);
 }
+
+/* Crosshair expansion effect */
+.crosshair.scanning .crosshair-top { top: -5px; }
+.crosshair.scanning .crosshair-bottom { bottom: -5px; }
+.crosshair.scanning .crosshair-left { left: -5px; }
+.crosshair.scanning .crosshair-right { right: -5px; }
 
 /* ===== TARGET OUTLINE BOX ===== */
 #target-outline {
@@ -95,7 +171,27 @@ body {
     border: 2px solid #FCEE0C;
     box-shadow: 0 0 10px rgba(252, 238, 12, 0.4);
     pointer-events: none;
-    transition: all 0.1s ease;
+    transition: all 0.05s linear;
+    animation: targetGlitch 3s ease-in-out infinite;
+}
+
+@keyframes targetGlitch {
+    0%, 90%, 100% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
+    91% {
+        transform: translate(-2px, 1px);
+        opacity: 0.8;
+    }
+    92% {
+        transform: translate(2px, -1px);
+        opacity: 0.9;
+    }
+    93% {
+        transform: translate(0, 0);
+        opacity: 1;
+    }
 }
 
 #target-outline.hidden {
@@ -116,7 +212,34 @@ body {
     padding: 8px 12px;
     min-width: 200px;
     box-shadow: 0 0 15px rgba(252, 238, 12, 0.3);
-    transition: all 0.15s ease;
+    transition: left 0.05s linear, top 0.05s linear;
+    animation: infoBoxAppear 0.3s ease-out, infoGlitch 4s ease-in-out infinite;
+}
+
+@keyframes infoBoxAppear {
+    0% {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes infoGlitch {
+    0%, 95%, 100% {
+        filter: none;
+    }
+    96% {
+        filter: hue-rotate(90deg) brightness(1.2);
+    }
+    97% {
+        filter: hue-rotate(-90deg) brightness(0.8);
+    }
+    98% {
+        filter: none;
+    }
 }
 
 #target-info.hidden {
@@ -138,7 +261,8 @@ body {
     padding: 8px 12px;
     min-width: 200px;
     box-shadow: 0 0 15px rgba(46, 255, 255, 0.3);
-    transition: all 0.15s ease;
+    transition: left 0.05s linear, top 0.05s linear;
+    animation: infoBoxAppear 0.3s ease-out, infoGlitch 4s ease-in-out infinite;
 }
 
 #vehicle-info.hidden {
@@ -162,6 +286,16 @@ body {
     margin-bottom: 6px;
     text-transform: uppercase;
     text-shadow: 0 0 8px currentColor;
+    animation: textFlicker 5s ease-in-out infinite;
+}
+
+@keyframes textFlicker {
+    0%, 98%, 100% {
+        opacity: 1;
+    }
+    99% {
+        opacity: 0.7;
+    }
 }
 
 .info-content {
