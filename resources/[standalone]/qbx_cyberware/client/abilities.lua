@@ -272,40 +272,37 @@ CreateThread(function()
             
             lastGroundState = isOnGround
             
-            -- Air control ONLY when actually in air AND moving significantly (not running on ground)
-            -- AND not ragdolling
-            if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 and not IsPedRagdoll(ped) then
-                local vel = GetEntityVelocity(ped)
-                local heading = GetEntityHeading(ped)
-                local radians = math.rad(heading)
-                
-                -- Increased air control for smoother feel
-                local moveSpeed = 0.25
-                local newVelX = vel.x
-                local newVelY = vel.y
-                
-                -- Fixed direction calculations
-                if IsControlPressed(0, 32) then -- W - Forward
-                    newVelX = newVelX + (-math.sin(radians) * moveSpeed)
-                    newVelY = newVelY + (math.cos(radians) * moveSpeed)
-                end
-                if IsControlPressed(0, 33) then -- S - Backward
-                    newVelX = newVelX - (-math.sin(radians) * moveSpeed)
-                    newVelY = newVelY - (math.cos(radians) * moveSpeed)
-                end
-                if IsControlPressed(0, 34) then -- A - Left
-                    newVelX = newVelX - (math.cos(radians) * moveSpeed)
-                    newVelY = newVelY - (math.sin(radians) * moveSpeed)
-                end
-                if IsControlPressed(0, 35) then -- D - Right
-                    newVelX = newVelX + (math.cos(radians) * moveSpeed)
-                    newVelY = newVelY + (math.sin(radians) * moveSpeed)
-                end
-                
-                if newVelX ~= vel.x or newVelY ~= vel.y then
-                    SetEntityVelocity(ped, newVelX, newVelY, vel.z)
-                end
-            end
+            -- Air control disabled (was causing bugs)
+            -- if (isFalling or isJumping) and not isOnGround and verticalSpeed > 0.5 and not IsPedRagdoll(ped) then
+            --     local vel = GetEntityVelocity(ped)
+            --     local heading = GetEntityHeading(ped)
+            --     local radians = math.rad(heading)
+            --     
+            --     local moveSpeed = 0.25
+            --     local newVelX = vel.x
+            --     local newVelY = vel.y
+            --     
+            --     if IsControlPressed(0, 32) then -- W - Forward
+            --         newVelX = newVelX + (-math.sin(radians) * moveSpeed)
+            --         newVelY = newVelY + (math.cos(radians) * moveSpeed)
+            --     end
+            --     if IsControlPressed(0, 33) then -- S - Backward
+            --         newVelX = newVelX - (-math.sin(radians) * moveSpeed)
+            --         newVelY = newVelY - (math.cos(radians) * moveSpeed)
+            --     end
+            --     if IsControlPressed(0, 34) then -- A - Left
+            --         newVelX = newVelX - (math.cos(radians) * moveSpeed)
+            --         newVelY = newVelY - (math.sin(radians) * moveSpeed)
+            --     end
+            --     if IsControlPressed(0, 35) then -- D - Right
+            --         newVelX = newVelX + (math.cos(radians) * moveSpeed)
+            --         newVelY = newVelY + (math.sin(radians) * moveSpeed)
+            --     end
+            --     
+            --     if newVelX ~= vel.x or newVelY ~= vel.y then
+            --         SetEntityVelocity(ped, newVelX, newVelY, vel.z)
+            --     end
+            -- end
             
             -- Jump boost
             if IsControlJustPressed(0, 22) then -- SPACE
