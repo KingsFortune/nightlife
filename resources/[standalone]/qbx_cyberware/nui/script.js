@@ -23,7 +23,7 @@ const vehicleClass = document.querySelector('.vehicle-class');
 
 // Sound cache
 const sounds = {
-    doublejump: new Audio('sounds/doublejump.ogg')
+    doublejump: new Audio('../sounds/doublejump.ogg')
 };
 
 // Listen for messages from Lua
