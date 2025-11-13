@@ -21,6 +21,11 @@ const vehicleDistance = document.querySelector('.vehicle-distance');
 const vehicleMake = document.querySelector('.vehicle-make');
 const vehicleClass = document.querySelector('.vehicle-class');
 
+// Sound cache
+const sounds = {
+    doublejump: new Audio('sounds/doublejump.ogg')
+};
+
 // Listen for messages from Lua
 window.addEventListener('message', (event) => {
     const data = event.data;
@@ -40,6 +45,10 @@ window.addEventListener('message', (event) => {
             
         case 'clearTarget':
             clearTarget();
+            break;
+            
+        case 'playSound':
+            playSound(data.sound, data.volume);
             break;
     }
 });
@@ -155,3 +164,12 @@ function clearTarget() {
     targetOutline.classList.add('hidden');
 }
 
+// Play sound effect
+function playSound(soundName, volume = 1.0) {
+    if (sounds[soundName]) {
+        const sound = sounds[soundName];
+        sound.volume = volume;
+        sound.currentTime = 0; // Reset to start
+        sound.play().catch(err => console.log('Sound play error:', err));
+    }
+}
