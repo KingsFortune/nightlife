@@ -53,8 +53,75 @@ local function GenerateNPCData(ped)
     local lastName = lastNames[math.random(#lastNames)]
     local fullName = firstName .. " " .. lastName
     
-    -- Generate occupation
-    local occupation = occupations[math.random(#occupations)]
+    -- Determine occupation based on ped model/type
+    local occupation = "Civilian"
+    local pedModel = GetEntityModel(ped)
+    local pedType = GetPedType(ped)
+    
+    -- Check specific ped models for occupation
+    if IsPedInAnyPoliceVehicle(ped) or pedType == 6 then -- Type 6 = cop
+        occupation = "Police Officer"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_cop_01")) or IsPedModel(ped, GetHashKey("s_f_y_cop_01")) or IsPedModel(ped, GetHashKey("s_m_m_security_01")) then
+        occupation = "Security Guard"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_paramedic_01")) or IsPedModel(ped, GetHashKey("s_m_m_doctor_01")) then
+        occupation = "Medical Personnel"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_fireman_01")) then
+        occupation = "Firefighter"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_armoured_01")) or IsPedModel(ped, GetHashKey("s_m_m_armoured_02")) then
+        occupation = "Armored Transport"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_construct_01")) or IsPedModel(ped, GetHashKey("s_m_y_construct_02")) then
+        occupation = "Construction Worker"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_garbage")) then
+        occupation = "Sanitation Worker"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_gardener_01")) then
+        occupation = "Landscaper"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_warehouse")) then
+        occupation = "Warehouse Worker"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_postal_01")) or IsPedModel(ped, GetHashKey("s_m_m_postal_02")) then
+        occupation = "Postal Worker"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_dealer_01")) then
+        occupation = "Street Vendor"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_busboy_01")) then
+        occupation = "Service Worker"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_chef_01")) then
+        occupation = "Chef"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_barman_01")) then
+        occupation = "Bartender"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_waiter_01")) then
+        occupation = "Waiter"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_pilot_01")) or IsPedModel(ped, GetHashKey("s_m_m_pilot_02")) then
+        occupation = "Pilot"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_scientist_01")) then
+        occupation = "Scientist"
+    elseif IsPedModel(ped, GetHashKey("mp_m_shopkeep_01")) or IsPedModel(ped, GetHashKey("s_m_m_shopkeep_01")) then
+        occupation = "Store Clerk"
+    elseif IsPedModel(ped, GetHashKey("ig_bankman")) or IsPedModel(ped, GetHashKey("s_m_m_banker_01")) then
+        occupation = "Bank Employee"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_movspace_01")) then
+        occupation = "Janitor"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_airworker")) then
+        occupation = "Airport Worker"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_autopsy_01")) then
+        occupation = "Coroner"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_doorman_01")) then
+        occupation = "Doorman"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_lifeinvad_01")) then
+        occupation = "Tech Worker"
+    elseif IsPedModel(ped, GetHashKey("s_m_y_valet_01")) then
+        occupation = "Valet"
+    -- Business attire models
+    elseif IsPedModel(ped, GetHashKey("s_m_m_fiboffice_01")) or IsPedModel(ped, GetHashKey("s_m_m_fiboffice_02")) then
+        occupation = "Government Agent"
+    elseif IsPedModel(ped, GetHashKey("s_m_m_ciasec_01")) then
+        occupation = "Security Contractor"
+    -- Generic business
+    elseif pedType == 26 or pedType == 27 then -- Business types
+        local businessOccupations = {"Accountant", "Lawyer", "Manager", "Real Estate Agent", "Insurance Agent"}
+        occupation = businessOccupations[math.random(#businessOccupations)]
+    else
+        -- Random occupation for generic peds
+        occupation = occupations[math.random(#occupations)]
+    end
     
     -- Cache the data
     local npcData = {
