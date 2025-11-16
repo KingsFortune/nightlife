@@ -105,6 +105,91 @@ body {
     50% { opacity: 0.5; }
 }
 
+/* Scanning Progress Bar */
+#scan-progress {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, 100px);
+    width: 400px;
+    text-align: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+#scan-progress.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.scan-progress-bar {
+    position: relative;
+    width: 100%;
+    height: 6px;
+    background: rgba(0, 0, 0, 0.8);
+    border: 1px solid #FCEE0C;
+    box-shadow: 
+        0 0 10px rgba(252, 238, 12, 0.4),
+        inset 0 0 10px rgba(0, 0, 0, 0.5);
+    margin-bottom: 8px;
+    overflow: hidden;
+}
+
+.scan-progress-fill {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, 
+        #FCEE0C 0%, 
+        #FFD700 50%, 
+        #FCEE0C 100%);
+    box-shadow: 
+        0 0 15px rgba(252, 238, 12, 0.8),
+        inset 0 0 5px rgba(255, 255, 255, 0.5);
+    transition: width 0.1s linear;
+    animation: progressShine 1s linear infinite;
+}
+
+.scan-progress-glitch {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 3px;
+    height: 100%;
+    background: rgba(252, 238, 12, 0.5);
+    animation: glitchMove 0.1s linear infinite;
+}
+
+@keyframes progressShine {
+    0% {
+        background-position: 0% 50%;
+    }
+    100% {
+        background-position: 200% 50%;
+    }
+}
+
+@keyframes glitchMove {
+    0%, 100% { opacity: 0.3; transform: translateX(0); }
+    50% { opacity: 1; transform: translateX(-2px); }
+}
+
+.scan-progress-text {
+    color: #FCEE0C;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-shadow: 0 0 10px rgba(252, 238, 12, 0.8);
+    animation: textPulse 1s ease-in-out infinite;
+}
+
+@keyframes textPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
 /* HUD Corners */
 .hud-corner {
     position: absolute;
@@ -298,52 +383,66 @@ body {
 /* ===== TARGET OUTLINE BOX ===== */
 #target-outline {
     position: absolute;
-    border: none;
+    border: 2px solid #FCEE0C;
+    box-shadow: 
+        0 0 15px rgba(252, 238, 12, 0.6),
+        inset 0 0 15px rgba(252, 238, 12, 0.2);
     pointer-events: none;
     transition: all 0.05s linear;
+    animation: outlineGlow 2s ease-in-out infinite;
+    background: linear-gradient(135deg, 
+        rgba(252, 238, 12, 0.05) 0%, 
+        transparent 50%, 
+        rgba(252, 238, 12, 0.05) 100%);
 }
 
-/* Corner brackets style */
-#target-outline::before,
+/* Animated inner border */
+#target-outline::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 1px solid rgba(252, 238, 12, 0.3);
+    margin: 4px;
+    pointer-events: none;
+}
+
+/* Scan line effect inside box */
 #target-outline::after {
     content: '';
     position: absolute;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #FCEE0C;
-    box-shadow: 0 0 10px rgba(252, 238, 12, 0.6);
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(252, 238, 12, 0.8) 50%, 
+        transparent 100%);
+    box-shadow: 0 0 10px rgba(252, 238, 12, 0.8);
+    animation: scanLineMove 1.5s linear infinite;
+    pointer-events: none;
 }
 
-#target-outline::before {
-    top: -2px;
-    left: -2px;
-    border-right: none;
-    border-bottom: none;
+@keyframes scanLineMove {
+    0% { top: 0%; opacity: 0; }
+    10% { opacity: 1; }
+    90% { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
 }
 
-#target-outline::after {
-    bottom: -2px;
-    right: -2px;
-    border-left: none;
-    border-top: none;
-}
-
-@keyframes targetGlitch {
-    0%, 90%, 100% {
-        transform: translate(0, 0);
-        opacity: 1;
+@keyframes outlineGlow {
+    0%, 100% {
+        box-shadow: 
+            0 0 15px rgba(252, 238, 12, 0.6),
+            inset 0 0 15px rgba(252, 238, 12, 0.2);
     }
-    91% {
-        transform: translate(-2px, 1px);
-        opacity: 0.8;
-    }
-    92% {
-        transform: translate(2px, -1px);
-        opacity: 0.9;
-    }
-    93% {
-        transform: translate(0, 0);
-        opacity: 1;
+    50% {
+        box-shadow: 
+            0 0 25px rgba(252, 238, 12, 0.8),
+            inset 0 0 20px rgba(252, 238, 12, 0.3);
     }
 }
 
@@ -351,10 +450,41 @@ body {
     display: none;
 }
 
-#target-outline.npc::before,
-#target-outline.npc::after {
+#target-outline.npc {
     border-color: #2EFFFF;
-    box-shadow: 0 0 10px rgba(46, 255, 255, 0.6);
+    box-shadow: 
+        0 0 15px rgba(46, 255, 255, 0.6),
+        inset 0 0 15px rgba(46, 255, 255, 0.2);
+    background: linear-gradient(135deg, 
+        rgba(46, 255, 255, 0.05) 0%, 
+        transparent 50%, 
+        rgba(46, 255, 255, 0.05) 100%);
+    animation: outlineGlowCyan 2s ease-in-out infinite;
+}
+
+#target-outline.npc::before {
+    border-color: rgba(46, 255, 255, 0.3);
+}
+
+#target-outline.npc::after {
+    background: linear-gradient(90deg, 
+        transparent 0%, 
+        rgba(46, 255, 255, 0.8) 50%, 
+        transparent 100%);
+    box-shadow: 0 0 10px rgba(46, 255, 255, 0.8);
+}
+
+@keyframes outlineGlowCyan {
+    0%, 100% {
+        box-shadow: 
+            0 0 15px rgba(46, 255, 255, 0.6),
+            inset 0 0 15px rgba(46, 255, 255, 0.2);
+    }
+    50% {
+        box-shadow: 
+            0 0 25px rgba(46, 255, 255, 0.8),
+            inset 0 0 20px rgba(46, 255, 255, 0.3);
+    }
 }
 
 /* ===== TARGET INFO BOX ===== */

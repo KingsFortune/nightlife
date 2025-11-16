@@ -1,5 +1,8 @@
 // Kiroshi Optics - Clean Toggle System
 let kiroshiActive = false;
+let isScanning = false;
+let scanProgress = 0;
+let scanInterval = null;
 
 // DOM elements
 const overlay = document.getElementById('kiroshi-overlay');
@@ -7,6 +10,8 @@ const targetInfo = document.getElementById('target-info');
 const vehicleInfo = document.getElementById('vehicle-info');
 const targetOutline = document.getElementById('target-outline');
 const crosshair = document.querySelector('.crosshair');
+const scanProgressBar = document.getElementById('scan-progress');
+const scanProgressFill = document.querySelector('.scan-progress-fill');
 
 // Ped info box elements
 const targetName = document.querySelector('.target-name');
@@ -71,6 +76,11 @@ function toggleKiroshi(active) {
 function updateTarget(target) {
     if (!kiroshiActive) return;
     
+    // Start scanning animation if not already scanning
+    if (!isScanning) {
+        startScan();
+    }
+    
     // Hide vehicle info, show target info
     vehicleInfo.classList.add('hidden');
     targetInfo.classList.remove('hidden');
@@ -106,6 +116,11 @@ function updateTarget(target) {
 function updateVehicle(target) {
     if (!kiroshiActive) return;
     
+    // Start scanning animation if not already scanning
+    if (!isScanning) {
+        startScan();
+    }
+    
     // Hide target info, show vehicle info
     targetInfo.classList.add('hidden');
     vehicleInfo.classList.remove('hidden');
@@ -132,6 +147,42 @@ function clearTarget() {
     targetInfo.classList.add('hidden');
     vehicleInfo.classList.add('hidden');
     targetOutline.classList.add('hidden');
+    stopScan();
+}
+
+// Start scanning progress bar
+function startScan() {
+    if (isScanning) return;
+    
+    isScanning = true;
+    scanProgress = 0;
+    scanProgressBar.classList.remove('hidden');
+    scanProgressFill.style.width = '0%';
+    
+    // 1.5 second scan duration
+    const scanDuration = 1500;
+    const updateInterval = 16; // ~60fps
+    const increment = (100 / scanDuration) * updateInterval;
+    
+    scanInterval = setInterval(() => {
+        scanProgress += increment;
+        scanProgressFill.style.width = Math.min(scanProgress, 100) + '%';
+        
+        if (scanProgress >= 100) {
+            stopScan();
+        }
+    }, updateInterval);
+}
+
+// Stop scanning progress bar
+function stopScan() {
+    if (scanInterval) {
+        clearInterval(scanInterval);
+        scanInterval = null;
+    }
+    isScanning = false;
+    scanProgressBar.classList.add('hidden');
+    scanProgress = 0;
 }
 
 // Play sound effect
