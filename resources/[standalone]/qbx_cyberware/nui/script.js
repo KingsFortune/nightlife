@@ -3,6 +3,8 @@ let kiroshiActive = false;
 let isScanning = false;
 let scanProgress = 0;
 let scanInterval = null;
+let currentTargetId = null;
+let scanComplete = false;
 
 // DOM elements
 const overlay = document.getElementById('kiroshi-overlay');
@@ -76,70 +78,92 @@ function toggleKiroshi(active) {
 function updateTarget(target) {
     if (!kiroshiActive) return;
     
-    // Start scanning animation if not already scanning
-    if (!isScanning) {
+    // Generate unique ID for target (using position as proxy since we don't get entity ID)
+    const targetId = `${target.name}_${Math.floor(target.boxX)}_${Math.floor(target.boxY)}`;
+    
+    // If new target, reset scan
+    if (targetId !== currentTargetId) {
+        currentTargetId = targetId;
+        scanComplete = false;
+        stopScan();
         startScan();
     }
     
-    // Hide vehicle info, show target info
-    vehicleInfo.classList.add('hidden');
-    targetInfo.classList.remove('hidden');
-    targetOutline.classList.remove('hidden');
-    
-    // Set type class (player or npc)
-    if (target.isPlayer) {
-        targetInfo.classList.remove('npc');
-        targetOutline.classList.remove('npc');
-    } else {
-        targetInfo.classList.add('npc');
-        targetOutline.classList.add('npc');
-    }
-    
-    // Update text content
-    targetName.textContent = target.name || 'UNKNOWN';
-    targetDistance.textContent = target.distance + 'm';
-    targetJob.textContent = target.job || 'CIVILIAN';
-    
-    // Update health bar
-    const health = target.health || 100;
-    healthFill.style.width = health + '%';
-    healthText.textContent = health + '%';
-    
     // Position outline box around target
+    targetOutline.classList.remove('hidden');
     targetOutline.style.left = target.boxX + 'px';
     targetOutline.style.top = target.boxY + 'px';
     targetOutline.style.width = target.boxWidth + 'px';
     targetOutline.style.height = target.boxHeight + 'px';
+    
+    // Set type class (player or npc)
+    if (target.isPlayer) {
+        targetOutline.classList.remove('npc');
+    } else {
+        targetOutline.classList.add('npc');
+    }
+    
+    // Only show info after scan is complete
+    if (scanComplete) {
+        vehicleInfo.classList.add('hidden');
+        targetInfo.classList.remove('hidden');
+        
+        if (target.isPlayer) {
+            targetInfo.classList.remove('npc');
+        } else {
+            targetInfo.classList.add('npc');
+        }
+        
+        // Update text content
+        targetName.textContent = target.name || 'UNKNOWN';
+        targetDistance.textContent = target.distance + 'm';
+        targetJob.textContent = target.job || 'CIVILIAN';
+        
+        // Update health bar
+        const health = target.health || 100;
+        healthFill.style.width = health + '%';
+        healthText.textContent = health + '%';
+    } else {
+        targetInfo.classList.add('hidden');
+    }
 }
 
 // Update vehicle information
 function updateVehicle(target) {
     if (!kiroshiActive) return;
     
-    // Start scanning animation if not already scanning
-    if (!isScanning) {
+    // Generate unique ID for vehicle
+    const targetId = `veh_${Math.floor(target.boxX)}_${Math.floor(target.boxY)}`;
+    
+    // If new target, reset scan
+    if (targetId !== currentTargetId) {
+        currentTargetId = targetId;
+        scanComplete = false;
+        stopScan();
         startScan();
     }
     
-    // Hide target info, show vehicle info
-    targetInfo.classList.add('hidden');
-    vehicleInfo.classList.remove('hidden');
-    targetOutline.classList.remove('hidden');
-    
-    // Vehicles always use cyan
-    targetOutline.classList.add('npc');
-    
-    // Update vehicle text content
-    vehicleModel.textContent = target.model || 'UNKNOWN';
-    vehicleDistance.textContent = target.distance + 'm';
-    vehicleMake.textContent = target.make || 'UNKNOWN';
-    vehicleClass.textContent = target.class || 'UNKNOWN';
-    
     // Position outline box around vehicle
+    targetOutline.classList.remove('hidden');
+    targetOutline.classList.add('npc'); // Vehicles always use cyan
     targetOutline.style.left = target.boxX + 'px';
     targetOutline.style.top = target.boxY + 'px';
     targetOutline.style.width = target.boxWidth + 'px';
     targetOutline.style.height = target.boxHeight + 'px';
+    
+    // Only show info after scan is complete
+    if (scanComplete) {
+        targetInfo.classList.add('hidden');
+        vehicleInfo.classList.remove('hidden');
+        
+        // Update vehicle text content
+        vehicleModel.textContent = target.model || 'UNKNOWN';
+        vehicleDistance.textContent = target.distance + 'm';
+        vehicleMake.textContent = target.make || 'UNKNOWN';
+        vehicleClass.textContent = target.class || 'UNKNOWN';
+    } else {
+        vehicleInfo.classList.add('hidden');
+    }
 }
 
 // Clear target display
@@ -148,6 +172,8 @@ function clearTarget() {
     vehicleInfo.classList.add('hidden');
     targetOutline.classList.add('hidden');
     stopScan();
+    currentTargetId = null;
+    scanComplete = false;
 }
 
 // Start scanning progress bar
@@ -156,6 +182,7 @@ function startScan() {
     
     isScanning = true;
     scanProgress = 0;
+    scanComplete = false;
     scanProgressBar.classList.remove('hidden');
     scanProgressFill.style.width = '0%';
     
@@ -169,6 +196,7 @@ function startScan() {
         scanProgressFill.style.width = Math.min(scanProgress, 100) + '%';
         
         if (scanProgress >= 100) {
+            scanComplete = true;
             stopScan();
         }
     }, updateInterval);
