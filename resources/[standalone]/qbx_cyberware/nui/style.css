@@ -40,13 +40,13 @@ body {
     background: 
         repeating-linear-gradient(
             0deg,
-            rgba(252, 238, 12, 0.03) 0px,
-            rgba(252, 238, 12, 0.03) 1px,
+            rgba(252, 238, 12, 0.08) 0px,
+            rgba(252, 238, 12, 0.08) 1px,
             transparent 1px,
-            transparent 2px
+            transparent 3px
         );
     pointer-events: none;
-    animation: scanlines 8s linear infinite;
+    animation: scanlines 6s linear infinite;
 }
 
 #kiroshi-overlay::after {
@@ -56,7 +56,11 @@ body {
     left: 0;
     width: 100%;
     height: 100%;
-    background: radial-gradient(ellipse at center, transparent 0%, rgba(252, 238, 12, 0.05) 100%);
+    background: 
+        radial-gradient(ellipse at center, transparent 0%, rgba(252, 238, 12, 0.12) 100%),
+        radial-gradient(circle at 20% 80%, rgba(46, 255, 255, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(252, 238, 12, 0.05) 0%, transparent 50%);
+    box-shadow: inset 0 0 100px rgba(252, 238, 12, 0.1);
     pointer-events: none;
 }
 
@@ -79,6 +83,110 @@ body {
     100% {
         opacity: 1;
     }
+}
+
+/* Grid Overlay */
+.grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: 
+        linear-gradient(rgba(252, 238, 12, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(252, 238, 12, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+    pointer-events: none;
+    animation: gridPulse 3s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 0.5; }
+}
+
+/* HUD Corners */
+.hud-corner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    pointer-events: none;
+}
+
+.hud-corner::before,
+.hud-corner::after {
+    content: '';
+    position: absolute;
+    background: #FCEE0C;
+    box-shadow: 0 0 10px rgba(252, 238, 12, 0.6);
+}
+
+.hud-top-left {
+    top: 20px;
+    left: 20px;
+}
+.hud-top-left::before {
+    top: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+}
+.hud-top-left::after {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+}
+
+.hud-top-right {
+    top: 20px;
+    right: 20px;
+}
+.hud-top-right::before {
+    top: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+}
+.hud-top-right::after {
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 2px;
+}
+
+.hud-bottom-left {
+    bottom: 20px;
+    left: 20px;
+}
+.hud-bottom-left::before {
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    height: 100%;
+}
+.hud-bottom-left::after {
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+}
+
+.hud-bottom-right {
+    bottom: 20px;
+    right: 20px;
+}
+.hud-bottom-right::before {
+    bottom: 0;
+    right: 0;
+    width: 2px;
+    height: 100%;
+}
+.hud-bottom-right::after {
+    bottom: 0;
+    right: 0;
+    width: 100%;
+    height: 2px;
 }
 
 /* ===== CROSSHAIR (CENTER) - Dynamic Recoil Style ===== */
@@ -159,20 +267,65 @@ body {
     background: linear-gradient(to left, transparent, #FCEE0C);
 }
 
-/* Crosshair expansion effect */
-.crosshair.scanning .crosshair-top { top: -5px; }
-.crosshair.scanning .crosshair-bottom { bottom: -5px; }
-.crosshair.scanning .crosshair-left { left: -5px; }
-.crosshair.scanning .crosshair-right { right: -5px; }
+/* Crosshair expansion effect - like gunhud recoil */
+.crosshair.scanning {
+    animation: crosshairRecoil 0.3s ease-out;
+}
+
+.crosshair.scanning .crosshair-top { 
+    top: -8px;
+    height: 16px;
+}
+.crosshair.scanning .crosshair-bottom { 
+    bottom: -8px;
+    height: 16px;
+}
+.crosshair.scanning .crosshair-left { 
+    left: -8px;
+    width: 16px;
+}
+.crosshair.scanning .crosshair-right { 
+    right: -8px;
+    width: 16px;
+}
+
+@keyframes crosshairRecoil {
+    0% { transform: translate(-50%, -50%) scale(1); }
+    50% { transform: translate(-50%, -50%) scale(0.7); }
+    100% { transform: translate(-50%, -50%) scale(1); }
+}
 
 /* ===== TARGET OUTLINE BOX ===== */
 #target-outline {
     position: absolute;
-    border: 2px solid #FCEE0C;
-    box-shadow: 0 0 10px rgba(252, 238, 12, 0.4);
+    border: none;
     pointer-events: none;
     transition: all 0.05s linear;
-    animation: targetGlitch 3s ease-in-out infinite;
+}
+
+/* Corner brackets style */
+#target-outline::before,
+#target-outline::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border: 2px solid #FCEE0C;
+    box-shadow: 0 0 10px rgba(252, 238, 12, 0.6);
+}
+
+#target-outline::before {
+    top: -2px;
+    left: -2px;
+    border-right: none;
+    border-bottom: none;
+}
+
+#target-outline::after {
+    bottom: -2px;
+    right: -2px;
+    border-left: none;
+    border-top: none;
 }
 
 @keyframes targetGlitch {
@@ -198,21 +351,30 @@ body {
     display: none;
 }
 
-#target-outline.npc {
+#target-outline.npc::before,
+#target-outline.npc::after {
     border-color: #2EFFFF;
-    box-shadow: 0 0 10px rgba(46, 255, 255, 0.4);
+    box-shadow: 0 0 10px rgba(46, 255, 255, 0.6);
 }
 
 /* ===== TARGET INFO BOX ===== */
 #target-info {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.85);
-    border: 1px solid #FCEE0C;
-    border-left: 3px solid #FCEE0C;
-    padding: 8px 12px;
-    min-width: 200px;
-    box-shadow: 0 0 15px rgba(252, 238, 12, 0.3);
-    transition: left 0.05s linear, top 0.05s linear;
+    position: fixed;
+    bottom: 100px;
+    left: 40px;
+    background: rgba(0, 0, 0, 0.92);
+    border: 2px solid #FCEE0C;
+    padding: 12px 16px;
+    min-width: 250px;
+    box-shadow: 
+        0 0 20px rgba(252, 238, 12, 0.4),
+        inset 0 0 20px rgba(252, 238, 12, 0.05);
+    clip-path: polygon(
+        0 8px, 8px 0,
+        calc(100% - 8px) 0, 100% 8px,
+        100% calc(100% - 8px), calc(100% - 8px) 100%,
+        8px 100%, 0 calc(100% - 8px)
+    );
     animation: infoBoxAppear 0.3s ease-out, infoGlitch 4s ease-in-out infinite;
 }
 
@@ -254,14 +416,22 @@ body {
 
 /* Vehicle info uses cyan theme */
 #vehicle-info {
-    position: absolute;
-    background: rgba(0, 0, 0, 0.85);
-    border: 1px solid #2EFFFF;
-    border-left: 3px solid #2EFFFF;
-    padding: 8px 12px;
-    min-width: 200px;
-    box-shadow: 0 0 15px rgba(46, 255, 255, 0.3);
-    transition: left 0.05s linear, top 0.05s linear;
+    position: fixed;
+    bottom: 100px;
+    right: 40px;
+    background: rgba(0, 0, 0, 0.92);
+    border: 2px solid #2EFFFF;
+    padding: 12px 16px;
+    min-width: 250px;
+    box-shadow: 
+        0 0 20px rgba(46, 255, 255, 0.4),
+        inset 0 0 20px rgba(46, 255, 255, 0.05);
+    clip-path: polygon(
+        0 8px, 8px 0,
+        calc(100% - 8px) 0, 100% 8px,
+        100% calc(100% - 8px), calc(100% - 8px) 100%,
+        8px 100%, 0 calc(100% - 8px)
+    );
     animation: infoBoxAppear 0.3s ease-out, infoGlitch 4s ease-in-out infinite;
 }
 
