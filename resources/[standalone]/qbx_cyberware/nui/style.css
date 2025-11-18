@@ -490,12 +490,13 @@ body {
 /* ===== TARGET INFO BOX ===== */
 #target-info {
     position: fixed;
-    bottom: 100px;
-    left: 40px;
+    top: 50%;
+    right: 80px;
+    transform: translateY(-50%);
     background: rgba(0, 0, 0, 0.92);
     border: 2px solid #FCEE0C;
-    padding: 12px 16px;
-    min-width: 250px;
+    padding: 20px 24px;
+    min-width: 320px;
     box-shadow: 
         0 0 20px rgba(252, 238, 12, 0.4),
         inset 0 0 20px rgba(252, 238, 12, 0.05);
@@ -511,11 +512,11 @@ body {
 @keyframes infoBoxAppear {
     0% {
         opacity: 0;
-        transform: translateX(-10px);
+        transform: translateY(-50%) translateX(10px);
     }
     100% {
         opacity: 1;
-        transform: translateX(0);
+        transform: translateY(-50%) translateX(0);
     }
 }
 
@@ -547,12 +548,13 @@ body {
 /* Vehicle info uses cyan theme */
 #vehicle-info {
     position: fixed;
-    bottom: 100px;
-    right: 40px;
+    top: 50%;
+    right: 80px;
+    transform: translateY(-50%);
     background: rgba(0, 0, 0, 0.92);
     border: 2px solid #2EFFFF;
-    padding: 12px 16px;
-    min-width: 250px;
+    padding: 20px 24px;
+    min-width: 320px;
     box-shadow: 
         0 0 20px rgba(46, 255, 255, 0.4),
         inset 0 0 20px rgba(46, 255, 255, 0.05);
@@ -580,9 +582,9 @@ body {
 
 .info-header {
     color: #FCEE0C;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 600;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
     margin-bottom: 6px;
     text-transform: uppercase;
     text-shadow: 0 0 8px currentColor;
